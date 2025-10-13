@@ -1,0 +1,361 @@
+# Eldrichain Web App
+
+Next.js frontend for the Eldrichain decentralized creature summoning dApp.
+
+## Prerequisites
+
+- Node.js 22.14.0 (managed via nvm - `.nvmrc` file included)
+- Yarn package manager
+- Deployed Eldrichain smart contract (Sepolia, Mainnet, Polygon, Arbitrum, Base, etc.)
+- WalletConnect Project ID (optional)
+
+## Installation
+
+```bash
+# Install correct Node.js version (from .nvmrc)
+nvm install
+nvm use
+
+# From root directory
+yarn install
+```
+
+## Quick Commands
+
+All commands can be run from the root directory:
+
+```bash
+yarn web dev           # Start dev server
+yarn web build         # Build for production
+yarn web start         # Run production server
+yarn web lint          # Lint code
+yarn web lint:fix      # Auto-fix linting issues
+yarn web format        # Format code
+```
+
+## Configuration
+
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+1. Edit `.env.local` and fill in the required values:
+
+```env
+# Your deployed contract address from apps/contracts (REQUIRED)
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
+
+# RPC URL (REQUIRED)
+NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+
+# WalletConnect Project ID (REQUIRED - get from https://cloud.walletconnect.com/)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+
+# Chain Configuration (REQUIRED)
+NEXT_PUBLIC_CHAIN_ID=11155111
+NEXT_PUBLIC_CHAIN_NAME=Sepolia
+NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://sepolia.etherscan.io
+
+# Native Currency (REQUIRED)
+NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Sepolia ETH
+NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=SepoliaETH
+NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
+```
+
+### Getting Required Credentials
+
+**Contract Address (Required):**
+
+- Deploy the contract first (see `apps/contracts/README.md`)
+- Copy the address from the deployment output
+- Or find it on [Sepolia Etherscan](https://sepolia.etherscan.io/)
+- Add to `.env.local` as `NEXT_PUBLIC_CONTRACT_ADDRESS`
+
+**WalletConnect Project ID:**
+
+1. Visit https://cloud.walletconnect.com/
+2. Sign up for a free account
+3. Create a new project
+4. Copy the Project ID
+
+**RPC URL (Required):**
+
+- Get a free API key from:
+  - [Alchemy](https://www.alchemy.com/)
+  - [Infura](https://infura.io/)
+- Select your target network (Sepolia, Mainnet, Polygon, etc.)
+- Add to `.env.local` as `NEXT_PUBLIC_RPC_URL`
+- **After adding/changing env vars, restart the dev server!**
+
+**Network Configuration:**
+
+The dApp is fully network-agnostic! Configure any EVM chain by setting:
+
+- `NEXT_PUBLIC_CHAIN_ID` - Chain ID (e.g., 11155111 for Sepolia)
+- `NEXT_PUBLIC_CHAIN_NAME` - Display name
+- `NEXT_PUBLIC_RPC_URL` - RPC endpoint
+- `NEXT_PUBLIC_BLOCK_EXPLORER_URL` - Block explorer
+
+See [docs/NETWORK_CONFIGURATION.md](../../docs/NETWORK_CONFIGURATION.md) for examples.
+
+## Development
+
+Run the development server:
+
+```bash
+# From root
+yarn web dev
+
+# Or from apps/web
+yarn dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Development Workflow
+
+1. Connect your wallet (MetaMask or other Web3 wallet)
+2. Ensure you're on Sepolia network
+3. Click "Summon Creature" button
+4. Confirm transaction in wallet
+5. Wait for transaction confirmation
+6. See your new creature appear in the collection
+
+## Building for Production
+
+Create an optimized production build:
+
+```bash
+# From root
+yarn web build
+
+# Or from apps/web
+yarn build
+```
+
+Run the production server:
+
+```bash
+# From root
+yarn web start
+
+# Or from apps/web
+yarn start
+```
+
+## Code Quality
+
+The project includes automated code quality tools:
+
+```bash
+# From root
+yarn web lint        # Run ESLint (Next.js)
+yarn web lint:fix    # Auto-fix linting issues
+yarn web format      # Format code with Prettier
+yarn web format:check # Check formatting
+
+# Or from apps/web
+yarn lint
+yarn lint:fix
+yarn format
+yarn format:check
+```
+
+All code is validated in CI via GitHub Actions on every push.
+
+## Project Structure
+
+```
+apps/web/
+├── src/
+│   ├── app/
+│   │   ├── globals.css             # Global styles
+│   │   ├── layout.tsx              # Root layout with providers
+│   │   ├── page.tsx                # Main homepage
+│   │   └── page.styles.ts          # Homepage styles
+│   ├── components/
+│   │   ├── Collection.component.tsx   # Display user's creatures
+│   │   ├── Collection.styles.ts       # Collection component styles
+│   │   ├── CreatureCard.component.tsx # Individual creature card
+│   │   ├── CreatureCard.styles.ts     # Card component styles
+│   │   ├── Providers.component.tsx    # Wagmi/React Query providers
+│   │   ├── SummonButton.component.tsx # Summon button with cooldown
+│   │   └── SummonButton.styles.ts     # Button component styles
+│   ├── config/
+│   │   ├── contract.config.ts      # Contract ABI and address
+│   │   └── wagmi.config.ts         # Wagmi configuration
+│   ├── data/
+│   │   ├── creatures.data.ts       # TypeScript types and exports
+│   │   └── creatures.json          # All 97 creature definitions (JSON)
+│   └── lib/
+│       └── env.config.ts           # Environment variable validation
+├── .env.example                    # Environment variables template
+├── .nvmrc                          # Node.js version (22.14.0)
+├── next.config.js                 # Next.js configuration
+├── tailwind.config.ts             # Tailwind CSS configuration
+└── package.json
+```
+
+## Features
+
+### Wallet Connection
+
+- Connect with MetaMask, WalletConnect, and other Web3 wallets
+- Automatic network detection and switching
+- Persistent connection across page reloads
+
+### Daily Summoning
+
+- Summon one creature per UTC day (resets at midnight UTC, not 24-hour cooldown)
+- Real-time countdown timer showing next available summon with UTC datetime
+- Transaction status feedback (pending, confirming, success)
+- Disabled state when already summoned today
+
+### Creature Collection
+
+- Grid display of all owned creatures
+- Color-coded rarity badges (Common, Rare, Epic, Deity)
+- Creature descriptions and levels
+- Automatic refresh after summoning
+
+### Responsive Design
+
+- Mobile-first design approach
+- Works on phones, tablets, and desktops
+- Optimized layouts for different screen sizes
+
+## Styling
+
+The app uses Tailwind CSS with a dark theme:
+
+**Color Scheme:**
+
+- Common: Gray (#9CA3AF)
+- Rare: Blue (#60A5FA)
+- Epic: Purple (#C084FC)
+- Deity: Gold (#FBBF24)
+
+**Fonts:**
+
+- System fonts (Arial, Helvetica, sans-serif)
+
+To customize styling, edit:
+
+- `src/app/globals.css` - Global styles
+- `tailwind.config.ts` - Tailwind configuration
+
+## Deployment
+
+### Deploy to Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Import project on [Vercel](https://vercel.com/)
+3. Set environment variables in Vercel dashboard
+4. Deploy!
+
+### Deploy to Other Platforms
+
+The app can be deployed to any platform that supports Next.js:
+
+- Netlify
+- AWS Amplify
+- Cloudflare Pages
+- Self-hosted with `npm run build && npm run start`
+
+## Troubleshooting
+
+**Wallet won't connect:**
+
+- Ensure you have a Web3 wallet installed (MetaMask, etc.)
+- Check WalletConnect Project ID is configured
+- Try refreshing the page
+
+**Wrong network message:**
+
+- Open your wallet
+- Switch to your configured network (check `.env.local` for `NEXT_PUBLIC_CHAIN_NAME`)
+- If the network isn't listed in your wallet, add it manually using the settings from your `.env.local` file
+
+**Summon button is disabled:**
+
+- Check if you've already summoned today (resets at midnight UTC)
+- Verify you have testnet ETH for gas fees
+- Ensure contract address is correctly configured
+- Check the countdown timer for when you can summon next
+
+**Collection doesn't load:**
+
+- Verify contract address in `.env` is correct
+- Check you're connected to Sepolia network
+- Try refreshing the page
+
+**Transaction fails:**
+
+- Ensure you have enough Sepolia ETH for gas
+- Check you're not on cooldown
+- Verify contract is deployed and accessible
+
+**"Invalid contract address" or "Missing env variable" error:**
+
+- Contract address must start with "0x"
+- Verify address matches deployed contract
+- Check for typos in `.env.local` file
+- **Restart the dev server** after changing environment variables
+- Hard refresh browser (Ctrl+Shift+R)
+
+## Development Tips
+
+### Testing Locally
+
+1. Use the same wallet address across browser sessions
+2. Speed up time using Hardhat's local network (for testing)
+3. Keep browser console open to see transaction logs
+
+### Debugging
+
+Enable React DevTools and Wagmi DevTools:
+
+```typescript
+// In Providers.tsx, wrap with:
+<WagmiProvider config={config}>
+  {/* Your app */}
+</WagmiProvider>
+```
+
+### Performance
+
+- Contract reads are cached by React Query
+- Collection refetches after successful summons
+- Countdown timer updates every second
+
+## Technologies Used
+
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Type safety (ES2020 target for BigInt support)
+- **Tailwind CSS**: Utility-first styling with best practices
+- **Wagmi v2**: React hooks for Ethereum
+- **Viem**: TypeScript Ethereum library
+- **RainbowKit**: Wallet connection UI
+- **React Query**: Data fetching and caching
+- **ESLint & Prettier**: Code quality and formatting with enforced rules
+
+## Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Wagmi Documentation](https://wagmi.sh/)
+- [RainbowKit Documentation](https://www.rainbowkit.com/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Viem Documentation](https://viem.sh/)
+
+## Support
+
+Having issues? Check:
+
+1. Environment variables are set correctly
+2. Contract is deployed on Sepolia
+3. Wallet is connected to Sepolia network
+4. You have Sepolia ETH for gas fees
+
+For contract-related issues, see `apps/contracts/README.md`.

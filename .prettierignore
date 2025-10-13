@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Artifacts
+apps/contracts/artifacts/
+apps/contracts/cache/
+apps/contracts/typechain-types/
+
+# Coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Lock files
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+

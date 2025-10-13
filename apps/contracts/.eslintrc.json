@@ -1,0 +1,14 @@
+{
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "root": true,
+  "env": {
+    "node": true,
+    "mocha": true
+  },
+  "rules": {
+    "curly": ["error", "all"],
+    "@typescript-eslint/no-explicit-any": "warn"
+  }
+}

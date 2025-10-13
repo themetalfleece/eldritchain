@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-format:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check formatting
+        run: yarn format:check
+
+      - name: Run linters
+        run: yarn lint
+
+  contracts:
+    name: Contracts - Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "apps/contracts/.nvmrc"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Compile contracts
+        run: yarn workspace @eldrichain/contracts compile
+
+      - name: Run contract tests
+        run: yarn workspace @eldrichain/contracts test
+
+  web:
+    name: Web App - Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "apps/web/.nvmrc"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create .env file for CI build
+        run: |
+          cat > apps/web/.env.local << 'EOF'
+          NEXT_PUBLIC_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
+          NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/dummy
+          NEXT_PUBLIC_CHAIN_ID=11155111
+          NEXT_PUBLIC_CHAIN_NAME=Sepolia
+          NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://sepolia.etherscan.io
+          NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Sepolia ETH
+          NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=SepoliaETH
+          NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
+          EOF
+
+      - name: Build web app
+        run: yarn workspace @eldrichain/web build

@@ -1,0 +1,584 @@
+[
+  {
+    "id": 0,
+    "name": "Chicken",
+    "rarity": "common",
+    "description": "A common farmyard bird"
+  },
+  {
+    "id": 1,
+    "name": "Mosquito",
+    "rarity": "common",
+    "description": "A tiny blood-sucking insect"
+  },
+  {
+    "id": 2,
+    "name": "House Cat",
+    "rarity": "common",
+    "description": "A domesticated feline companion"
+  },
+  {
+    "id": 3,
+    "name": "Goldfish",
+    "rarity": "common",
+    "description": "A small ornamental fish"
+  },
+  {
+    "id": 4,
+    "name": "Garden Snail",
+    "rarity": "common",
+    "description": "A slow-moving gastropod"
+  },
+  {
+    "id": 5,
+    "name": "House Mouse",
+    "rarity": "common",
+    "description": "A tiny rodent"
+  },
+  {
+    "id": 6,
+    "name": "Pigeon",
+    "rarity": "common",
+    "description": "An urban bird"
+  },
+  {
+    "id": 7,
+    "name": "Sparrow",
+    "rarity": "common",
+    "description": "A small songbird"
+  },
+  {
+    "id": 8,
+    "name": "Ladybug",
+    "rarity": "common",
+    "description": "A spotted beetle"
+  },
+  {
+    "id": 9,
+    "name": "Earthworm",
+    "rarity": "common",
+    "description": "A soil-dwelling worm"
+  },
+  {
+    "id": 10,
+    "name": "Butterfly",
+    "rarity": "common",
+    "description": "A colorful flying insect"
+  },
+  {
+    "id": 11,
+    "name": "Ant",
+    "rarity": "common",
+    "description": "A tiny social insect"
+  },
+  {
+    "id": 12,
+    "name": "Honeybee",
+    "rarity": "common",
+    "description": "A pollinating insect"
+  },
+  {
+    "id": 13,
+    "name": "Cricket",
+    "rarity": "common",
+    "description": "A chirping insect"
+  },
+  {
+    "id": 14,
+    "name": "Housefly",
+    "rarity": "common",
+    "description": "A common flying pest"
+  },
+  {
+    "id": 15,
+    "name": "Rabbit",
+    "rarity": "common",
+    "description": "A fluffy hopping mammal"
+  },
+  {
+    "id": 16,
+    "name": "Hamster",
+    "rarity": "common",
+    "description": "A small pet rodent"
+  },
+  {
+    "id": 17,
+    "name": "Guinea Pig",
+    "rarity": "common",
+    "description": "A friendly pet rodent"
+  },
+  {
+    "id": 18,
+    "name": "Gecko",
+    "rarity": "common",
+    "description": "A small lizard"
+  },
+  {
+    "id": 19,
+    "name": "Parakeet",
+    "rarity": "common",
+    "description": "A small colorful parrot"
+  },
+  {
+    "id": 20,
+    "name": "Frog",
+    "rarity": "common",
+    "description": "An amphibian that croaks"
+  },
+  {
+    "id": 21,
+    "name": "Toad",
+    "rarity": "common",
+    "description": "A warty amphibian"
+  },
+  {
+    "id": 22,
+    "name": "Crayfish",
+    "rarity": "common",
+    "description": "A freshwater crustacean"
+  },
+  {
+    "id": 23,
+    "name": "Hermit Crab",
+    "rarity": "common",
+    "description": "A crab that lives in shells"
+  },
+  {
+    "id": 24,
+    "name": "Guppy",
+    "rarity": "common",
+    "description": "A tiny tropical fish"
+  },
+  {
+    "id": 25,
+    "name": "Salamander",
+    "rarity": "common",
+    "description": "A small amphibian"
+  },
+  {
+    "id": 26,
+    "name": "Newt",
+    "rarity": "common",
+    "description": "An aquatic salamander"
+  },
+  {
+    "id": 27,
+    "name": "Starfish",
+    "rarity": "common",
+    "description": "A five-armed sea creature"
+  },
+  {
+    "id": 28,
+    "name": "Sea Urchin",
+    "rarity": "common",
+    "description": "A spiny sea creature"
+  },
+  {
+    "id": 29,
+    "name": "Slug",
+    "rarity": "common",
+    "description": "A shell-less gastropod"
+  },
+  {
+    "id": 30,
+    "name": "Caterpillar",
+    "rarity": "common",
+    "description": "A butterfly larva"
+  },
+  {
+    "id": 31,
+    "name": "Grasshopper",
+    "rarity": "common",
+    "description": "A jumping insect"
+  },
+  {
+    "id": 32,
+    "name": "Dragonfly",
+    "rarity": "common",
+    "description": "A fast-flying insect"
+  },
+  {
+    "id": 33,
+    "name": "Moth",
+    "rarity": "common",
+    "description": "A nocturnal flying insect"
+  },
+  {
+    "id": 34,
+    "name": "Beetle",
+    "rarity": "common",
+    "description": "A hard-shelled insect"
+  },
+  {
+    "id": 35,
+    "name": "Centipede",
+    "rarity": "common",
+    "description": "A many-legged arthropod"
+  },
+  {
+    "id": 36,
+    "name": "Millipede",
+    "rarity": "common",
+    "description": "A many-segmented arthropod"
+  },
+  {
+    "id": 37,
+    "name": "Spider",
+    "rarity": "common",
+    "description": "An eight-legged arachnid"
+  },
+  {
+    "id": 38,
+    "name": "Daddy Longlegs",
+    "rarity": "common",
+    "description": "A long-legged arachnid"
+  },
+  {
+    "id": 39,
+    "name": "Pill Bug",
+    "rarity": "common",
+    "description": "A small crustacean that rolls up"
+  },
+  {
+    "id": 40,
+    "name": "Squirrel",
+    "rarity": "common",
+    "description": "A tree-dwelling rodent"
+  },
+  {
+    "id": 41,
+    "name": "Chipmunk",
+    "rarity": "common",
+    "description": "A striped ground squirrel"
+  },
+  {
+    "id": 42,
+    "name": "Raccoon",
+    "rarity": "common",
+    "description": "A masked omnivore"
+  },
+  {
+    "id": 43,
+    "name": "Opossum",
+    "rarity": "common",
+    "description": "A nocturnal marsupial"
+  },
+  {
+    "id": 44,
+    "name": "Skunk",
+    "rarity": "common",
+    "description": "A striped mammal with a smelly defense"
+  },
+  {
+    "id": 45,
+    "name": "Hedgehog",
+    "rarity": "common",
+    "description": "A spiny small mammal"
+  },
+  {
+    "id": 46,
+    "name": "Mole",
+    "rarity": "common",
+    "description": "A burrowing mammal"
+  },
+  {
+    "id": 47,
+    "name": "Shrew",
+    "rarity": "common",
+    "description": "A tiny insectivore"
+  },
+  {
+    "id": 48,
+    "name": "Vole",
+    "rarity": "common",
+    "description": "A small rodent"
+  },
+  {
+    "id": 49,
+    "name": "Bat",
+    "rarity": "common",
+    "description": "A flying mammal"
+  },
+  {
+    "id": 50,
+    "name": "Crow",
+    "rarity": "common",
+    "description": "An intelligent black bird"
+  },
+  {
+    "id": 51,
+    "name": "Raven",
+    "rarity": "common",
+    "description": "A large corvid"
+  },
+  {
+    "id": 52,
+    "name": "Bluejay",
+    "rarity": "common",
+    "description": "A noisy blue bird"
+  },
+  {
+    "id": 53,
+    "name": "Cardinal",
+    "rarity": "common",
+    "description": "A bright red bird"
+  },
+  {
+    "id": 54,
+    "name": "Robin",
+    "rarity": "common",
+    "description": "A red-breasted songbird"
+  },
+  {
+    "id": 55,
+    "name": "Woodpecker",
+    "rarity": "common",
+    "description": "A tree-pecking bird"
+  },
+  {
+    "id": 56,
+    "name": "Seagull",
+    "rarity": "common",
+    "description": "A coastal scavenger bird"
+  },
+  {
+    "id": 57,
+    "name": "Duck",
+    "rarity": "common",
+    "description": "A waterfowl"
+  },
+  {
+    "id": 58,
+    "name": "Goose",
+    "rarity": "common",
+    "description": "A large waterfowl"
+  },
+  {
+    "id": 59,
+    "name": "Swan",
+    "rarity": "common",
+    "description": "An elegant waterfowl"
+  },
+  {
+    "id": 1000,
+    "name": "Lion",
+    "rarity": "rare",
+    "description": "The king of the jungle"
+  },
+  {
+    "id": 1001,
+    "name": "Tiger",
+    "rarity": "rare",
+    "description": "A striped apex predator"
+  },
+  {
+    "id": 1002,
+    "name": "Bear",
+    "rarity": "rare",
+    "description": "A powerful omnivore"
+  },
+  {
+    "id": 1003,
+    "name": "Wolf",
+    "rarity": "rare",
+    "description": "A pack-hunting canine"
+  },
+  {
+    "id": 1004,
+    "name": "Shark",
+    "rarity": "rare",
+    "description": "An apex ocean predator"
+  },
+  {
+    "id": 1005,
+    "name": "Crocodile",
+    "rarity": "rare",
+    "description": "An ancient reptilian predator"
+  },
+  {
+    "id": 1006,
+    "name": "Eagle",
+    "rarity": "rare",
+    "description": "A majestic bird of prey"
+  },
+  {
+    "id": 1007,
+    "name": "Hawk",
+    "rarity": "rare",
+    "description": "A sharp-eyed hunter"
+  },
+  {
+    "id": 1008,
+    "name": "Falcon",
+    "rarity": "rare",
+    "description": "The fastest bird"
+  },
+  {
+    "id": 1009,
+    "name": "Owl",
+    "rarity": "rare",
+    "description": "A nocturnal hunter"
+  },
+  {
+    "id": 1010,
+    "name": "Python",
+    "rarity": "rare",
+    "description": "A constricting snake"
+  },
+  {
+    "id": 1011,
+    "name": "Cobra",
+    "rarity": "rare",
+    "description": "A venomous hooded snake"
+  },
+  {
+    "id": 1012,
+    "name": "Komodo Dragon",
+    "rarity": "rare",
+    "description": "The largest lizard"
+  },
+  {
+    "id": 1013,
+    "name": "Velociraptor",
+    "rarity": "rare",
+    "description": "An intelligent dinosaur hunter"
+  },
+  {
+    "id": 1014,
+    "name": "T-Rex",
+    "rarity": "rare",
+    "description": "The tyrant lizard king"
+  },
+  {
+    "id": 1015,
+    "name": "Sabertooth Tiger",
+    "rarity": "rare",
+    "description": "An extinct ice age predator"
+  },
+  {
+    "id": 1016,
+    "name": "Dire Wolf",
+    "rarity": "rare",
+    "description": "A prehistoric wolf"
+  },
+  {
+    "id": 1017,
+    "name": "Giant Squid",
+    "rarity": "rare",
+    "description": "A deep sea leviathan"
+  },
+  {
+    "id": 1018,
+    "name": "Megalodon",
+    "rarity": "rare",
+    "description": "A prehistoric giant shark"
+  },
+  {
+    "id": 1019,
+    "name": "Pterodactyl",
+    "rarity": "rare",
+    "description": "A flying reptile from the age of dinosaurs"
+  },
+  {
+    "id": 1500,
+    "name": "Shoggoth",
+    "rarity": "epic",
+    "description": "An amorphous protoplasmic entity"
+  },
+  {
+    "id": 1501,
+    "name": "Deep One",
+    "rarity": "epic",
+    "description": "A fish-frog hybrid from the depths"
+  },
+  {
+    "id": 1502,
+    "name": "Elder Thing",
+    "rarity": "epic",
+    "description": "An ancient alien scientist"
+  },
+  {
+    "id": 1503,
+    "name": "Night-Gaunt",
+    "rarity": "epic",
+    "description": "A faceless flying horror"
+  },
+  {
+    "id": 1504,
+    "name": "Dimensional Shambler",
+    "rarity": "epic",
+    "description": "A creature that walks between dimensions"
+  },
+  {
+    "id": 1505,
+    "name": "Moon-Beast",
+    "rarity": "epic",
+    "description": "A pale toad-like creature from the moon"
+  },
+  {
+    "id": 1506,
+    "name": "Hunting Horror",
+    "rarity": "epic",
+    "description": "A serpentine creature from beyond"
+  },
+  {
+    "id": 1507,
+    "name": "Star-Spawn",
+    "rarity": "epic",
+    "description": "Offspring of the Great Old Ones"
+  },
+  {
+    "id": 1508,
+    "name": "Byakhee",
+    "rarity": "epic",
+    "description": "An interstellar horror"
+  },
+  {
+    "id": 1509,
+    "name": "Hound of Tindalos",
+    "rarity": "epic",
+    "description": "A predator from the angles of time"
+  },
+  {
+    "id": 1510,
+    "name": "Flying Polyp",
+    "rarity": "epic",
+    "description": "A partially invisible wind-walker"
+  },
+  {
+    "id": 1511,
+    "name": "Mi-Go",
+    "rarity": "epic",
+    "description": "A fungal alien from Yuggoth"
+  },
+  {
+    "id": 1600,
+    "name": "Cthulhu",
+    "rarity": "deity",
+    "description": "The Great Dreamer in R'lyeh"
+  },
+  {
+    "id": 1601,
+    "name": "Azathoth",
+    "rarity": "deity",
+    "description": "The Blind Idiot God at the center of chaos"
+  },
+  {
+    "id": 1602,
+    "name": "Nyarlathotep",
+    "rarity": "deity",
+    "description": "The Crawling Chaos, messenger of the Outer Gods"
+  },
+  {
+    "id": 1603,
+    "name": "Yog-Sothoth",
+    "rarity": "deity",
+    "description": "The Key and the Gate, existing in all time and space"
+  },
+  {
+    "id": 1604,
+    "name": "Shub-Niggurath",
+    "rarity": "deity",
+    "description": "The Black Goat of the Woods with a Thousand Young"
+  }
+]

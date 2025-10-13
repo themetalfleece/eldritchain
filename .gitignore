@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+apps/*/.env
+apps/*/.env.local
+
+# Allow .env.example files
+!.env.example
+!apps/*/.env.example
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hardhat
+apps/contracts/artifacts/
+apps/contracts/cache/
+apps/contracts/typechain-types/
+
+# Misc
+*.log
+.cache/
