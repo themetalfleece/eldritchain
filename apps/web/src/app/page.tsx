@@ -1,6 +1,7 @@
 "use client";
 
 import { Collection } from "@/components/Collection.component";
+import { ShareCollectionButton } from "@/components/ShareCollectionButton.component";
 import { SummonButton } from "@/components/SummonButton.component";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useState } from "react";
@@ -33,10 +34,11 @@ export default function Home() {
 
         <div className={styles.main.summonSection}>
           <SummonButton onSummonComplete={handleSummonComplete} />
+          <ShareCollectionButton />
         </div>
 
         <div className={styles.main.collectionSection}>
-          <Collection refreshTrigger={refreshTrigger} />
+          <Collection refreshTrigger={refreshTrigger} showOwnCollectionOnly />
         </div>
       </main>
 
