@@ -108,12 +108,13 @@ yarn dev:indexer
 yarn build
 yarn start:api
 
-# Production - Process 2: Event Indexer  
+# Production - Process 2: Event Indexer
 yarn build
 yarn start:indexer
 ```
 
 **💡 Why separate processes?**
+
 - Scale API and indexer independently
 - Restart indexer without affecting API
 - Better resource allocation
@@ -138,7 +139,7 @@ docker build -f apps/indexer/Dockerfile.indexer -t eldritchain-indexer:latest .
 Create a `docker-compose.prod.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   mongodb:
@@ -211,12 +212,14 @@ docker push your-username/eldritchain-indexer:latest
 ### Docker Image Details
 
 **Both images use:**
+
 - Node.js 22.14.0 Alpine (small footprint)
 - Multi-stage builds (optimized size)
 - Production dependencies only
 - Non-root user for security
 
 **Image sizes:**
+
 - API: ~150MB
 - Indexer: ~150MB
 

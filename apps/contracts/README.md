@@ -77,6 +77,7 @@ PROXY_ADDRESS=
 Networks are configured via `@eldritchain/common` - no need to manually set RPC URLs! Just set `NETWORK` and the RPC URL is automatically loaded from viem's built-in chains.
 
 **Available networks:**
+
 - `polygonAmoy` - Polygon Amoy testnet ⭐ (default, free, uses public RPC)
 - `polygon` - Polygon mainnet ($0.01-0.05 per transaction)
 - `sepolia` - Ethereum Sepolia testnet (free, uses public RPC)
@@ -94,10 +95,12 @@ Networks are configured via `@eldritchain/common` - no need to manually set RPC 
 **Get Test Tokens:**
 
 For Polygon Amoy (default):
+
 - Get test POL from https://faucet.polygon.technology/
 - Free and instant!
 
 For Sepolia:
+
 - Use https://sepoliafaucet.com/
 - Or https://www.alchemy.com/faucets/ethereum-sepolia
 - You'll need ~0.01 ETH for deployment
@@ -105,6 +108,7 @@ For Sepolia:
 **Etherscan API Key (Optional):**
 
 Only needed for contract verification:
+
 1. Create account at https://etherscan.io/ (or Polygonscan for Polygon)
 2. Go to API Keys section
 3. Create a new API key (free)
