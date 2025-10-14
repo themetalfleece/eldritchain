@@ -17,7 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\" && prettier --write --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\" && prettier --check --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\""
   },
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
+  "packageManager": "yarn@4.10.3",
   "devDependencies": {
     "prettier": "^3.0.0",
     "prettier-plugin-solidity": "^2.1.0"
