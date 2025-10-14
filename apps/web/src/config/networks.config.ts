@@ -1,5 +1,5 @@
 import { Chain } from "viem";
-import { mainnet, sepolia } from "viem/chains";
+import { mainnet, polygon, polygonAmoy, sepolia } from "viem/chains";
 
 export interface NetworkConfig {
   chain: Chain;
@@ -14,6 +14,16 @@ export const networks = {
 
   sepolia: {
     chain: sepolia,
+    isTestnet: true,
+  } satisfies NetworkConfig,
+
+  polygon: {
+    chain: polygon,
+    isTestnet: false,
+  } satisfies NetworkConfig,
+
+  polygonAmoy: {
+    chain: polygonAmoy,
     isTestnet: true,
   } satisfies NetworkConfig,
 } as const;

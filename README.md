@@ -5,8 +5,9 @@ A decentralized daily creature summoning dApp built on Ethereum. Summon a random
 ## 📚 Documentation
 
 - **[Quick Start](docs/QUICKSTART.md)** - Get up and running in 10 minutes
-- **[UTC Day System](docs/UTC_DAY_SYSTEM.md)** - Once per day resets at midnight UTC (not 24h cooldown!)
 - **[Network Configuration](docs/NETWORK_CONFIGURATION.md)** - Switch between chains (Mainnet, Polygon, etc.)
+- **[Polygon Migration](docs/POLYGON_MIGRATION.md)** - Understanding MATIC → POL migration
+- **[UTC Day System](docs/UTC_DAY_SYSTEM.md)** - Once per day resets at midnight UTC (not 24h cooldown!)
 - **[Adding Creatures](docs/ADDING_CREATURES.md)** - Auto-sync script reads your data file
 - **[ID System](docs/ID_SYSTEM.md)** - Proportional namespaces explained
 - **[Gacha Distribution](docs/GACHA_DISTRIBUTION.md)** - Why 97 creatures is optimal

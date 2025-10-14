@@ -8,14 +8,44 @@ Edit `apps/web/.env.local`:
 
 ```env
 # Just change this one line!
-NEXT_PUBLIC_NETWORK=sepolia  # or "mainnet"
+NEXT_PUBLIC_NETWORK=polygonAmoy  # or "polygon", "sepolia", "mainnet"
 ```
 
 That's it! Network details (RPC URLs, chain IDs, explorers) are predefined in `apps/web/src/config/networks.config.ts`.
 
 ## Built-in Networks
 
-### Sepolia Testnet (Default)
+### Polygon Amoy Testnet (Default - Recommended) ⭐
+
+```env
+NEXT_PUBLIC_NETWORK=polygonAmoy
+```
+
+- **Chain ID**: 80002
+- **Native Token**: POL (Polygon migrated from MATIC → POL in 2024)
+- **RPC**: Uses default Polygon RPC from viem
+- **Explorer**: https://amoy.polygonscan.com
+- **Faucet**: https://faucet.polygon.technology/
+- **Cost**: FREE (testnet)
+
+**Note:** Your wallet might still display "MATIC" but the actual token is POL. This is normal during the transition period.
+
+### Polygon Mainnet (Production - Recommended) 🟣
+
+```env
+NEXT_PUBLIC_NETWORK=polygon
+```
+
+- **Chain ID**: 137
+- **Native Token**: POL (for gas fees)
+- **RPC**: Uses default Polygon RPC from viem
+- **Explorer**: https://polygonscan.com
+- **Cost**: $0.01-0.05 per transaction
+- **Why?**: 100x cheaper than Ethereum!
+
+**Getting POL:** Buy on exchanges (some still list as MATIC) or bridge from Ethereum
+
+### Ethereum Sepolia Testnet
 
 ```env
 NEXT_PUBLIC_NETWORK=sepolia
@@ -25,6 +55,7 @@ NEXT_PUBLIC_NETWORK=sepolia
 - **RPC**: https://ethereum-sepolia-rpc.publicnode.com (free public RPC)
 - **Explorer**: https://sepolia.etherscan.io
 - **Faucet**: https://sepoliafaucet.com/
+- **Cost**: FREE (testnet)
 
 ### Ethereum Mainnet
 
@@ -35,6 +66,7 @@ NEXT_PUBLIC_NETWORK=mainnet
 - **Chain ID**: 1
 - **RPC**: Uses default mainnet RPC from viem
 - **Explorer**: https://etherscan.io
+- **Cost**: $2-10 per transaction (expensive!)
 
 ## Adding More Networks
 

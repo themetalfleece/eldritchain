@@ -51,8 +51,8 @@ NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
 # Network (REQUIRED)
-# Options: "sepolia" | "mainnet"
-NEXT_PUBLIC_NETWORK=sepolia
+# Options: "polygonAmoy" | "polygon" | "sepolia" | "mainnet"
+NEXT_PUBLIC_NETWORK=polygonAmoy
 ```
 
 ### Getting Required Credentials
@@ -74,9 +74,11 @@ NEXT_PUBLIC_NETWORK=sepolia
 
 **Network Selection:**
 
-Simply set `NEXT_PUBLIC_NETWORK` to either:
-- `sepolia` - Ethereum Sepolia testnet (uses [public RPC](https://ethereum-sepolia-rpc.publicnode.com))
-- `mainnet` - Ethereum mainnet
+Simply set `NEXT_PUBLIC_NETWORK` to:
+- `polygonAmoy` - Polygon Amoy testnet (recommended for testing - cheap gas!)
+- `polygon` - Polygon mainnet (recommended for production - $0.01-0.05 per transaction)
+- `sepolia` - Ethereum Sepolia testnet (free, uses [public RPC](https://ethereum-sepolia-rpc.publicnode.com))
+- `mainnet` - Ethereum mainnet (expensive - $2-10 per transaction)
 
 Network configurations are predefined in `src/config/networks.config.ts`. To add more networks, edit that file.
 
@@ -99,11 +101,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Development Workflow
 
 1. Connect your wallet (MetaMask or other Web3 wallet)
-2. Ensure you're on the correct network (Sepolia testnet by default)
-3. Click "Summon Creature" button
-4. Confirm transaction in wallet
-5. Wait for transaction confirmation
-6. See your new creature appear in the collection
+2. Ensure you're on the correct network (Polygon Amoy testnet by default)
+3. Get test POL from [Polygon faucet](https://faucet.polygon.technology/)
+   - Note: Polygon uses POL for gas (not MATIC - they migrated in 2024)
+   - Your wallet might still show "MATIC" as the symbol, but it's actually POL
+4. Click "Summon Creature" button
+5. Confirm transaction in wallet
+6. Wait for transaction confirmation
+7. See your new creature appear in the collection
 
 ## Building for Production
 

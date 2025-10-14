@@ -74,10 +74,14 @@ Example `.env.local`:
 ```env
 NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
-NEXT_PUBLIC_NETWORK=sepolia
+NEXT_PUBLIC_NETWORK=polygonAmoy
 ```
 
-Note: Sepolia uses a free public RPC ([publicnode.com](https://ethereum-sepolia-rpc.publicnode.com)), so no API key needed!
+**Getting Test Tokens:**
+- **Polygon Amoy**: Get test POL from https://faucet.polygon.technology/
+- **Sepolia**: Get test ETH from https://sepoliafaucet.com/
+
+Note: Polygon uses **POL** for gas (not MATIC). Your wallet might still show "MATIC" during the transition period.
 
 ## Step 5: Run the App! (1 min)
 

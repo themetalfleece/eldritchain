@@ -75,7 +75,7 @@ jobs:
           cat > apps/web/.env.local << 'EOF'
           NEXT_PUBLIC_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=dummy_project_id
-          NEXT_PUBLIC_NETWORK=sepolia
+          NEXT_PUBLIC_NETWORK=polygonAmoy
           EOF
 
       - name: Build web app
