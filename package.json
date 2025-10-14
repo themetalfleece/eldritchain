@@ -12,8 +12,8 @@
     "contracts": "yarn workspace @eldritchain/contracts",
     "indexer": "yarn workspace @eldritchain/indexer",
     "common": "yarn workspace @eldritchain/common",
-    "lint": "yarn workspaces run lint",
-    "lint:fix": "yarn workspaces run lint:fix",
+    "lint": "yarn workspaces foreach -A run lint",
+    "lint:fix": "yarn workspaces foreach -A run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\" && prettier --write --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\" && prettier --check --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\""
   },
