@@ -1,6 +1,7 @@
 "use client";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/config/contract.config";
+import { getCreature } from "@/data/creatures.data";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { styles } from "./SummonButton.styles";
@@ -12,6 +13,9 @@ interface SummonButtonProps {
 export function SummonButton({ onSummonComplete }: SummonButtonProps) {
   const { address, isConnected } = useAccount();
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [summonedCreature, setSummonedCreature] = useState<{ id: number; name: string } | null>(
+    null
+  );
 
   const { data: canSummon } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -37,7 +41,11 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    data: receipt,
+  } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -57,14 +65,15 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
         return;
       }
 
-      // Format as UTC time for clarity
+      // Format as local time respecting user's locale
       const date = new Date(nextTime * 1000);
       const hours = Math.floor(diff / 3600);
       const minutes = Math.floor((diff % 3600) / 60);
       const seconds = diff % 60;
 
-      const utcString = date.toUTCString().split(" ").slice(0, 5).join(" ");
-      setTimeLeft(`${hours}h ${minutes}m ${seconds}s (${utcString})`);
+      const dateString = date.toLocaleDateString();
+      const timeString = date.toLocaleTimeString();
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s (${dateString} ${timeString})`);
     };
 
     updateTimer();
@@ -74,14 +83,36 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
   }, [nextSummonTime, canSummon]);
 
   useEffect(() => {
-    if (isSuccess && hash && onSummonComplete) {
-      setTimeout(() => {
-        onSummonComplete(0n);
-      }, 1000);
+    if (isSuccess && receipt) {
+      // Parse the CreatureSummoned event from the receipt
+      // Event signature: CreatureSummoned(address indexed user, uint256 indexed creatureId, uint256 level)
+      const logs = receipt.logs.filter(
+        (log) => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
+      );
+
+      if (logs.length > 0 && logs[0].topics.length >= 3) {
+        // The creatureId is in topics[2] (second indexed parameter)
+        const creatureIdHex = logs[0].topics[2];
+        if (!creatureIdHex) return;
+
+        const creatureId = parseInt(creatureIdHex, 16);
+        const creature = getCreature(creatureId);
+
+        if (creature) {
+          setSummonedCreature({ id: creatureId, name: creature.name });
+        }
+
+        if (onSummonComplete) {
+          setTimeout(() => {
+            onSummonComplete(BigInt(creatureId));
+          }, 1000);
+        }
+      }
     }
-  }, [isSuccess, hash, onSummonComplete]);
+  }, [isSuccess, receipt, onSummonComplete]);
 
   const handleSummon = () => {
+    setSummonedCreature(null); // Reset previous summon
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
@@ -127,7 +158,11 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
 
       {error && <div className={styles.errorMessage}>Error: {error.message}</div>}
 
-      {isSuccess && <div className={styles.successMessage}>Successfully summoned a creature!</div>}
+      {isSuccess && summonedCreature && (
+        <div className={styles.successMessage}>
+          Successfully summoned: <strong>{summonedCreature.name}</strong> (#{summonedCreature.id})
+        </div>
+      )}
     </div>
   );
 }

@@ -1,16 +1,15 @@
-"use client";
-
 import { Collection } from "@/components/Collection.component";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { isAddress } from "viem";
 import { styles } from "./page.styles";
 
-export default function WalletPage() {
-  const params = useParams();
-  const address = params.address as string;
+interface WalletPageProps {
+  params: Promise<{ address: string }>;
+}
 
+export default async function WalletPage({ params }: WalletPageProps) {
+  const { address } = await params;
   const isValidAddress = address && isAddress(address);
 
   return (
@@ -20,7 +19,7 @@ export default function WalletPage() {
           <Link href="/">
             <h1 className={styles.header.title}>Eldritchain</h1>
           </Link>
-          <ConnectButton />
+          <ConnectButtonClient />
         </div>
       </header>
 

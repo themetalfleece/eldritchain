@@ -21,8 +21,8 @@ async function processEvent(log: Log): Promise<void> {
     transactionHash: string;
   };
   if (!args?.summoner || args?.creatureId === undefined || !transactionHash) {
-    console.warn("Invalid event args:", log);
-    return;
+    console.warn("⚠️ Invalid event args, skipping:", log);
+    return; // Skip malformed events (shouldn't happen with valid contracts)
   }
 
   const address = args.summoner.toLowerCase();
@@ -65,11 +65,12 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
 
   console.log(`📝 Found ${logs.length} events`);
 
+  // Process all events - if any fail, the whole range will be retried
   for (const log of logs) {
-    await processEvent(log);
+    await processEvent(log); // Throws on error -> triggers retry
   }
 
-  // Update indexer state
+  // Update indexer state only after ALL events processed successfully
   await IndexerState.findOneAndUpdate(
     {},
     {
@@ -78,6 +79,8 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
     },
     { upsert: true }
   );
+
+  console.log(`✅ Updated state to block ${toBlock}`);
 }
 
 /** Main indexer loop */
@@ -110,10 +113,12 @@ export async function startEventListener(): Promise<void> {
 
       if (latestBlock > lastBlock) {
         await processBlockRange(lastBlock + 1n, latestBlock);
-        lastBlock = latestBlock;
+        lastBlock = latestBlock; // Only update in-memory state after successful processing
       }
     } catch (error) {
-      console.error("❌ Error in event listener:", error);
+      console.error("❌ Error in event listener (will retry next interval):", error);
+      // lastBlock is NOT updated -> same range will be retried next interval
+      // Idempotency checks in processEvent prevent duplicate processing
     }
   }, config.indexer.pollInterval);
 

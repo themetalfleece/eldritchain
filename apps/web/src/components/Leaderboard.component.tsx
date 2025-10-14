@@ -70,8 +70,13 @@ export async function Leaderboard({ limit = 10 }: LeaderboardProps) {
               className={styles.table.row}
             >
               <div className={styles.table.cell.rank}>#{index + 1}</div>
-              <div className={styles.table.cell.address}>
-                {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+              <div className={styles.table.cell.address} title={entry.address}>
+                <span className={styles.table.cell.addressDesktop}>
+                  {entry.address.slice(0, 7)}...{entry.address.slice(-5)}
+                </span>
+                <span className={styles.table.cell.addressMobile}>
+                  {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+                </span>
               </div>
               <div className={styles.table.cell.count}>
                 <span className={styles.rarity.deity}>{entry.deityCount}</span>

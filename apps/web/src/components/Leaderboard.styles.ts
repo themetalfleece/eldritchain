@@ -15,17 +15,19 @@ export const styles = {
       "bg-slate-800/50 rounded-lg border border-purple-800/30 overflow-hidden backdrop-blur-sm",
 
     header:
-      "grid grid-cols-7 gap-4 p-4 bg-slate-900/70 border-b border-purple-800/30 font-semibold text-purple-200 text-sm",
+      "grid grid-cols-3 md:grid-cols-7 gap-2 md:gap-4 p-3 md:p-4 bg-slate-900/70 border-b border-purple-800/30 font-semibold text-purple-200 text-xs md:text-sm",
 
     body: "divide-y divide-purple-800/20",
 
-    row: "grid grid-cols-7 gap-4 p-4 hover:bg-purple-900/20 transition-colors cursor-pointer no-underline",
+    row: "grid grid-cols-3 md:grid-cols-7 gap-2 md:gap-4 p-3 md:p-4 hover:bg-purple-900/20 transition-colors cursor-pointer no-underline",
 
     cell: {
-      rank: "text-yellow-400 font-bold",
-      address: "font-mono text-purple-300 truncate",
-      count: "text-center",
-      total: "text-center font-semibold text-purple-100",
+      rank: "text-yellow-400 font-bold text-sm md:text-base",
+      address: "font-mono text-purple-300 text-xs md:text-sm truncate md:overflow-visible",
+      addressDesktop: "hidden md:inline",
+      addressMobile: "md:hidden",
+      count: "text-center hidden md:block",
+      total: "text-center font-semibold text-purple-100 text-sm md:text-base",
     },
   },
 

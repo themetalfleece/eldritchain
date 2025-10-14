@@ -8,7 +8,7 @@ export async function generateMetadata({
   const { address } = await params;
 
   return {
-    title: `Wallet ${address.slice(0, 6)}...${address.slice(-4)} - Eldritchain`,
+    title: `Wallet ${address.slice(0, 7)}...${address.slice(-5)} - Eldritchain`,
     description: `View the Eldritchain creature collection for wallet ${address}`,
   };
 }

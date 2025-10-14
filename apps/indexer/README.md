@@ -66,6 +66,10 @@ START_BLOCK=5000000
 
 ### 4. Run the Indexer
 
+You can run both services together or separately:
+
+**Option A: Run Both Together (Monolithic)**
+
 ```bash
 # Development (with hot reload)
 yarn dev
@@ -74,6 +78,32 @@ yarn dev
 yarn build
 yarn start
 ```
+
+**Option B: Run Separately (Recommended for Production)**
+
+This allows you to scale each service independently and restart them without affecting each other.
+
+```bash
+# Development - Terminal 1: API Server
+yarn dev:api
+
+# Development - Terminal 2: Event Indexer
+yarn dev:indexer
+
+# Production - Process 1: API Server
+yarn build
+yarn start:api
+
+# Production - Process 2: Event Indexer  
+yarn build
+yarn start:indexer
+```
+
+**💡 Why separate processes?**
+- Scale API and indexer independently
+- Restart indexer without affecting API
+- Better resource allocation
+- Easier debugging and monitoring
 
 ## API Endpoints
 

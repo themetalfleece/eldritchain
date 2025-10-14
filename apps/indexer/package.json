@@ -5,8 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:api": "tsx watch src/api.ts",
+    "dev:indexer": "tsx watch src/indexer.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:api": "node dist/api.js",
+    "start:indexer": "node dist/indexer.js",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix"
   },

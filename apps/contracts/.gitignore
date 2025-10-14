@@ -9,3 +9,6 @@ typechain-types
 cache
 artifacts
 
+# OpenZeppelin files
+.openzeppelin
+.openzeppelin-upgradeable

@@ -1,11 +1,11 @@
 export const styles = {
-  container: "min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900",
+  container: "min-h-screen bg-gradient-to-b from-gray-900 to-black",
 
   header: {
-    container: "border-b border-purple-800/30 bg-slate-900/50 backdrop-blur-sm",
-    inner: "container mx-auto px-4 py-4 flex items-center justify-between",
+    container: "container mx-auto px-4 py-6",
+    inner: "flex justify-between items-center",
     title:
-      "text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity",
+      "text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity",
   },
 
   main: {
@@ -30,7 +30,6 @@ export const styles = {
   },
 
   footer: {
-    container:
-      "border-t border-purple-800/30 bg-slate-900/50 backdrop-blur-sm py-6 text-center text-purple-300/70 text-sm mt-auto",
+    container: "container mx-auto px-4 py-8 text-center text-gray-500 text-sm mt-auto",
   },
 };
