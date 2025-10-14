@@ -2,18 +2,18 @@ import { ethers, upgrades } from "hardhat";
 import { env } from "../env.config";
 
 async function main() {
-  console.log(`Deploying Eldrichain to ${env.defaultNetwork}...`);
+  console.log(`Deploying Eldritchain to ${env.defaultNetwork}...`);
 
-  const Eldrichain = await ethers.getContractFactory("Eldrichain");
-  const eldrichain = await upgrades.deployProxy(Eldrichain, [], {
+  const Eldritchain = await ethers.getContractFactory("Eldritchain");
+  const eldritchain = await upgrades.deployProxy(Eldritchain, [], {
     initializer: "initialize",
     kind: "uups",
   });
 
-  await eldrichain.waitForDeployment();
+  await eldritchain.waitForDeployment();
 
-  const address = await eldrichain.getAddress();
-  console.log(`Eldrichain deployed to: ${address}`);
+  const address = await eldritchain.getAddress();
+  console.log(`Eldritchain deployed to: ${address}`);
 
   console.log("\nSave this address to your .env files:");
   console.log(`NEXT_PUBLIC_CONTRACT_ADDRESS=${address}`);

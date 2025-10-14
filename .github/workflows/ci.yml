@@ -48,10 +48,10 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Compile contracts
-        run: yarn workspace @eldrichain/contracts compile
+        run: yarn workspace @eldritchain/contracts compile
 
       - name: Run contract tests
-        run: yarn workspace @eldrichain/contracts test
+        run: yarn workspace @eldritchain/contracts test
 
   web:
     name: Web App - Build & Lint
@@ -84,4 +84,4 @@ jobs:
           EOF
 
       - name: Build web app
-        run: yarn workspace @eldrichain/web build
+        run: yarn workspace @eldritchain/web build

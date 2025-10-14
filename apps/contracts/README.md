@@ -1,10 +1,10 @@
-# Eldrichain Smart Contracts
+# Eldritchain Smart Contracts
 
-Solidity smart contracts for the Eldrichain dApp, deployed on EVM-compatible chains.
+Solidity smart contracts for the Eldritchain dApp, deployed on EVM-compatible chains.
 
 ## Contract Overview
 
-**`Eldrichain.sol`** - Upgradeable using UUPS proxy pattern
+**`Eldritchain.sol`** - Upgradeable using UUPS proxy pattern
 
 **Features:**
 
@@ -177,8 +177,8 @@ This will:
 Example output:
 
 ```
-Deploying Eldrichain contract...
-Eldrichain deployed to: 0x1234567890abcdef1234567890abcdef12345678
+Deploying Eldritchain contract...
+Eldritchain deployed to: 0x1234567890abcdef1234567890abcdef12345678
 
 Save this address to your .env file in apps/web:
 NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
@@ -218,7 +218,7 @@ The script **automatically reads your JSON data file**, finds the highest IDs, a
 
 ## Contract Details
 
-### Eldrichain.sol
+### Eldritchain.sol
 
 Main contract with the following functions:
 
@@ -306,7 +306,7 @@ Approximate gas costs on Sepolia (will vary with network conditions):
 
 ## Development Workflow
 
-1. Make changes to `contracts/Eldrichain.sol`
+1. Make changes to `contracts/Eldritchain.sol`
 2. Run tests: `yarn test`
 3. Compile: `yarn compile`
 4. Deploy to testnet: `yarn deploy`

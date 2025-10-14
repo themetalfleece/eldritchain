@@ -2,7 +2,7 @@
 
 ## How It Works
 
-Eldrichain uses **UTC calendar days** instead of a 24-hour cooldown.
+Eldritchain uses **UTC calendar days** instead of a 24-hour cooldown.
 
 ### Traditional 24-Hour Cooldown ❌
 

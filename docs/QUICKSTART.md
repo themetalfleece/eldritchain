@@ -1,6 +1,6 @@
-# Eldrichain Quick Start Guide
+# Eldritchain Quick Start Guide
 
-Get up and running with Eldrichain in 10 minutes!
+Get up and running with Eldritchain in 10 minutes!
 
 ## Step 1: Install Dependencies (2 min)
 
@@ -53,7 +53,7 @@ yarn deploy
 **Save the contract address!** You'll see output like:
 
 ```
-Eldrichain deployed to: 0x1234567890abcdef1234567890abcdef12345678
+Eldritchain deployed to: 0x1234567890abcdef1234567890abcdef12345678
 ```
 
 ## Step 4: Set Up Web App (2 min)
@@ -113,6 +113,6 @@ Open http://localhost:3000 in your browser!
 - Deploy to production (see README.md)
 - Customize the UI (edit `apps/web/src/app/page.tsx`)
 - Add more creatures (edit `apps/web/src/data/creatures.ts`)
-- Modify game mechanics (edit `apps/contracts/contracts/Eldrichain.sol`)
+- Modify game mechanics (edit `apps/contracts/contracts/Eldritchain.sol`)
 
 Happy summoning! 🎮✨

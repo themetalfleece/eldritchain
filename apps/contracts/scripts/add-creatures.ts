@@ -10,7 +10,7 @@ async function main() {
 
   console.log(`Syncing creatures from data file to contract at ${env.proxyAddress}...`);
 
-  const Eldrichain = await ethers.getContractAt("Eldrichain", env.proxyAddress);
+  const Eldritchain = await ethers.getContractAt("Eldritchain", env.proxyAddress);
 
   // Read creatures from JSON file
   const creaturesPath = path.join(__dirname, "../../web/src/data/creatures.json");
@@ -59,15 +59,15 @@ async function main() {
 
   // Get current state from contract
   console.log("\nCurrent contract state:");
-  const currentCommonLast = Number(await Eldrichain.commonLast());
-  const currentRareLast = Number(await Eldrichain.rareLast());
-  const currentEpicLast = Number(await Eldrichain.epicLast());
-  const currentDeityLast = Number(await Eldrichain.deityLast());
+  const currentCommonLast = Number(await Eldritchain.commonLast());
+  const currentRareLast = Number(await Eldritchain.rareLast());
+  const currentEpicLast = Number(await Eldritchain.epicLast());
+  const currentDeityLast = Number(await Eldritchain.deityLast());
 
-  console.log(`  Common: ${await Eldrichain.commonCount()} creatures (0-${currentCommonLast})`);
-  console.log(`  Rare: ${await Eldrichain.rareCount()} creatures (1000-${currentRareLast})`);
-  console.log(`  Epic: ${await Eldrichain.epicCount()} creatures (1500-${currentEpicLast})`);
-  console.log(`  Deity: ${await Eldrichain.deityCount()} creatures (1600-${currentDeityLast})`);
+  console.log(`  Common: ${await Eldritchain.commonCount()} creatures (0-${currentCommonLast})`);
+  console.log(`  Rare: ${await Eldritchain.rareCount()} creatures (1000-${currentRareLast})`);
+  console.log(`  Epic: ${await Eldritchain.epicCount()} creatures (1500-${currentEpicLast})`);
+  console.log(`  Deity: ${await Eldritchain.deityCount()} creatures (1600-${currentDeityLast})`);
 
   // Calculate new last IDs from data file
   const newCommonLast = commonIds.length > 0 ? Math.max(...commonIds) : currentCommonLast;
@@ -94,7 +94,7 @@ async function main() {
 
   console.log("\nUpdating contract to match data file...");
 
-  const tx = await Eldrichain.addCreatures(newCommonLast, newRareLast, newEpicLast, newDeityLast);
+  const tx = await Eldritchain.addCreatures(newCommonLast, newRareLast, newEpicLast, newDeityLast);
 
   await tx.wait();
 

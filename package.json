@@ -1,5 +1,5 @@
 {
-  "name": "eldrichain",
+  "name": "eldritchain",
   "version": "1.0.0",
   "private": true,
   "description": "A decentralized daily creature summoning dApp with eldritch horror twist",
@@ -7,8 +7,8 @@
     "apps/*"
   ],
   "scripts": {
-    "web": "yarn workspace @eldrichain/web",
-    "contracts": "yarn workspace @eldrichain/contracts",
+    "web": "yarn workspace @eldritchain/web",
+    "contracts": "yarn workspace @eldritchain/contracts",
     "lint": "yarn workspaces run lint",
     "lint:fix": "yarn workspaces run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\" && prettier --write --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\"",

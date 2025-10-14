@@ -19,7 +19,7 @@ const targetChain = defineChain({
 });
 
 export const config = getDefaultConfig({
-  appName: "Eldrichain",
+  appName: "Eldritchain",
   projectId: env.walletConnectProjectId,
   chains: [targetChain],
   ssr: true,

@@ -17,7 +17,7 @@ export default function Home() {
     <div className={styles.container}>
       <header className={styles.header.container}>
         <div className={styles.header.inner}>
-          <h1 className={styles.header.title}>Eldrichain</h1>
+          <h1 className={styles.header.title}>Eldritchain</h1>
           <ConnectButton />
         </div>
       </header>
@@ -41,7 +41,7 @@ export default function Home() {
       </main>
 
       <footer className={styles.footer.container}>
-        <p>Eldrichain - A decentralized creature collection game</p>
+        <p>Eldritchain - A decentralized creature collection game</p>
       </footer>
     </div>
   );

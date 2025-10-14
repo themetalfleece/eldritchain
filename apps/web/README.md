@@ -1,12 +1,12 @@
-# Eldrichain Web App
+# Eldritchain Web App
 
-Next.js frontend for the Eldrichain decentralized creature summoning dApp.
+Next.js frontend for the Eldritchain decentralized creature summoning dApp.
 
 ## Prerequisites
 
 - Node.js 22.14.0 (managed via nvm - `.nvmrc` file included)
 - Yarn package manager
-- Deployed Eldrichain smart contract (Sepolia, Mainnet, Polygon, Arbitrum, Base, etc.)
+- Deployed Eldritchain smart contract (Sepolia, Mainnet, Polygon, Arbitrum, Base, etc.)
 - WalletConnect Project ID (optional)
 
 ## Installation
@@ -265,6 +265,13 @@ The app can be deployed to any platform that supports Next.js:
 - Self-hosted with `npm run build && npm run start`
 
 ## Troubleshooting
+
+**Hydration warning in dev console:**
+
+- This is often caused by browser extensions (ad blockers, cookie managers, etc.)
+- Test in incognito mode to verify it's extension-related
+- **This won't affect production users** - it's a dev-only warning
+- To disable the warning, you can add `suppressHydrationWarning` to the `<html>` tag in `layout.tsx`
 
 **Wallet won't connect:**
 

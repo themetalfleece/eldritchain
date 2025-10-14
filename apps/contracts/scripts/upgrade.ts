@@ -6,10 +6,10 @@ async function main() {
     throw new Error("Please set PROXY_ADDRESS in .env");
   }
 
-  console.log(`Upgrading Eldrichain at ${env.proxyAddress}...`);
+  console.log(`Upgrading Eldritchain at ${env.proxyAddress}...`);
 
-  const EldrichainV2 = await ethers.getContractFactory("Eldrichain");
-  const upgraded = await upgrades.upgradeProxy(env.proxyAddress, EldrichainV2);
+  const EldritchainV2 = await ethers.getContractFactory("Eldritchain");
+  const upgraded = await upgrades.upgradeProxy(env.proxyAddress, EldritchainV2);
 
   await upgraded.waitForDeployment();
 

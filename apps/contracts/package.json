@@ -1,7 +1,7 @@
 {
-  "name": "@eldrichain/contracts",
+  "name": "@eldritchain/contracts",
   "version": "1.0.0",
-  "description": "Eldrichain smart contracts",
+  "description": "Eldritchain smart contracts",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",

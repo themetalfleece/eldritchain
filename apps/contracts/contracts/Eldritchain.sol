@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Eldrichain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   // Fixed ID namespaces per rarity tier (proportional to drop rates)
   // Using uint16 since max ID is 1649 (uint16 max = 65535)
 

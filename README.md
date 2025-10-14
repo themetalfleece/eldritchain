@@ -1,4 +1,4 @@
-# Eldrichain
+# Eldritchain
 
 A decentralized daily creature summoning dApp built on Ethereum. Summon a random creature once per day and build your collection of common animals, rare predators, epic Lovecraftian monsters, and legendary eldritch deities.
 
@@ -14,7 +14,7 @@ A decentralized daily creature summoning dApp built on Ethereum. Summon a random
 
 ## Project Overview
 
-Eldrichain is a blockchain-based game where users can:
+Eldritchain is a blockchain-based game where users can:
 
 - Summon one creature per UTC day (resets at midnight UTC, not 24h cooldown)
 - Collect 97 unique creatures across 4 rarity tiers
@@ -35,7 +35,7 @@ Eldrichain is a blockchain-based game where users can:
 This is a monorepo containing two main applications:
 
 ```
-eldrichain/
+eldritchain/
 ├── apps/
 │   ├── contracts/   # Solidity smart contracts (Hardhat)
 │   └── web/         # Next.js frontend (React + Wagmi)
@@ -92,7 +92,7 @@ The project includes `.nvmrc` files in the root and both apps to ensure consiste
 
 ```bash
 git clone <your-repo-url>
-cd eldrichain
+cd eldritchain
 ```
 
 2. Copy `.env.example` files and configure your environment:
@@ -215,9 +215,9 @@ The contract does **NOT** store:
 
 ### `/apps/contracts`
 
-- `contracts/Eldrichain.sol` - Main smart contract
+- `contracts/Eldritchain.sol` - Main smart contract
 - `scripts/deploy.ts` - Deployment script
-- `test/Eldrichain.test.ts` - Contract tests
+- `test/Eldritchain.test.ts` - Contract tests
 - `hardhat.config.ts` - Hardhat configuration
 
 ### `/apps/web`

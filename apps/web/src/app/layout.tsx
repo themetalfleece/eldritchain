@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Eldrichain - Daily Creature Summoning",
+  title: "Eldritchain - Daily Creature Summoning",
   description: "Summon eldritch creatures once per day on the blockchain",
 };
 
