@@ -12,6 +12,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {
+    "@eldritchain/common": "1.0.0",
     "@rainbow-me/rainbowkit": "^2.1.0",
     "@tanstack/react-query": "^5.28.0",
     "clsx": "^2.1.1",

@@ -1,0 +1,309 @@
+# Eldritchain Indexer
+
+Backend service that indexes blockchain events and provides a high-performance leaderboard API using Fastify.
+
+## Features
+
+- 🔍 **Event Indexer** - Listens to `CreatureSummoned` events
+- 📊 **Leaderboard** - Ranks users by deity → epic → rare → common counts
+- 🗄️ **MongoDB** - Stores individual summon events
+- ⚡ **Fastify API** - High-performance REST API
+- 🐳 **Docker** - Easy MongoDB setup
+- 📜 **Event Sourcing** - Complete summon history with idempotent processing
+
+## Quick Start
+
+### 1. Start MongoDB
+
+```bash
+cd apps/indexer
+docker compose up -d
+```
+
+This starts MongoDB on port 27017.
+
+### 2. Install Dependencies
+
+```bash
+yarn install
+```
+
+### 3. Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your contract address and configuration:
+
+```env
+CONTRACT_ADDRESS=0xYourContractAddress
+NETWORK=polygonAmoy
+
+# IMPORTANT: Set START_BLOCK to your contract deployment block
+# This avoids scanning millions of empty blocks
+START_BLOCK=12345678  # Replace with your deployment block number
+```
+
+**💡 Pro Tip:** Always set `START_BLOCK` to your contract's deployment block! This avoids scanning millions of empty blocks.
+
+**How to find your deployment block:**
+1. Go to your contract on the block explorer (e.g., https://amoy.polygonscan.com/address/0xYourAddress)
+2. Click on the contract creation transaction
+3. Note the block number
+4. Set `START_BLOCK=<that_block_number>` in your `.env`
+
+**Examples:**
+```env
+# If deployed at block 77678611 on mainnet
+START_BLOCK=77678611
+
+# If deployed at block 5000000 on Polygon Amoy
+START_BLOCK=5000000
+```
+
+### 4. Run the Indexer
+
+```bash
+# Development (with hot reload)
+yarn dev
+
+# Production
+yarn build
+yarn start
+```
+
+## API Endpoints
+
+### Health Check
+```
+GET /health
+```
+
+### Get Leaderboard
+```
+GET /api/leaderboard?limit=100
+```
+
+Aggregates user stats from all summon events and ranks them.
+
+Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "address": "0x1234...",
+      "totalSummons": 150,
+      "deityCount": 5,
+      "epicCount": 12,
+      "rareCount": 38,
+      "commonCount": 95,
+      "lastSummonTime": "2024-10-14T12:00:00.000Z"
+    }
+  ],
+  "count": 100
+}
+```
+
+### Get User Stats
+```
+GET /api/user/:address
+```
+
+Aggregates stats for a specific user including their rank.
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "address": "0x1234...",
+    "totalSummons": 150,
+    "deityCount": 5,
+    "epicCount": 12,
+    "rareCount": 38,
+    "commonCount": 95,
+    "rank": 42,
+    "lastSummonTime": "2024-10-14T12:00:00.000Z"
+  }
+}
+```
+
+### Get User Summon History
+```
+GET /api/user/:address/history?limit=50&skip=0
+```
+
+Returns paginated list of all summon events for a user.
+
+Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "address": "0x1234...",
+      "creatureId": 1601,
+      "rarity": "deity",
+      "level": 1,
+      "timestamp": "2024-10-14T12:00:00.000Z",
+      "blockNumber": "12345678",
+      "transactionHash": "0xabc..."
+    }
+  ],
+  "pagination": {
+    "total": 150,
+    "limit": 50,
+    "skip": 0,
+    "hasMore": true
+  }
+}
+```
+
+### Get Global Stats
+```
+GET /api/stats
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "totalUsers": 1247,
+    "totalSummons": 45892,
+    "topDeityCollector": {
+      "address": "0x1234...",
+      "deityCount": 15
+    }
+  }
+}
+```
+
+## How It Works
+
+1. **Event Listening**: Continuously polls the blockchain for `CreatureSummoned` events
+2. **Data Processing**: Categorizes creatures by rarity (deity/epic/rare/common)
+3. **Database Storage**: Stores each summon event as a separate document in MongoDB
+4. **Real-time Aggregation**: API aggregates stats on-demand from events
+5. **Idempotency**: Duplicate events are automatically skipped using transaction hash
+
+### Data Model
+
+Each summon is stored as an individual event:
+
+```typescript
+{
+  address: "0x1234...",
+  creatureId: 1601,
+  rarity: "deity",
+  level: 1,
+  timestamp: Date,
+  blockNumber: "12345678",
+  transactionHash: "0xabc..."
+}
+```
+
+**Benefits:**
+- Complete summon history per user
+- Time-series analytics capabilities  
+- Easy to rebuild aggregations
+- Idempotent event processing
+
+## Leaderboard Ranking
+
+Users are ranked by:
+1. **Deity count** (highest priority)
+2. **Epic count** (if deity count is tied)
+3. **Rare count** (if epic count is tied)
+4. **Common count** (if rare count is tied)
+
+## Configuration
+
+Environment variables in `.env` (all REQUIRED):
+
+| Variable           | Description                                          | Example                                        |
+| ------------------ | ---------------------------------------------------- | ---------------------------------------------- |
+| `MONGODB_URI`      | MongoDB connection string                            | `mongodb://localhost:27017/eldritchain`        |
+| `CONTRACT_ADDRESS` | Smart contract address                               | `0x1234...` (42 chars starting with 0x)        |
+| `NETWORK`          | Network name (auto-configures RPC and chain ID)      | `polygonAmoy`, `polygon`, `sepolia`, `mainnet` |
+| `PORT`             | API server port                                      | `3001`                                         |
+| `START_BLOCK`      | Block to start indexing from (use deployment block!) | `77678611` or `0`                              |
+| `POLL_INTERVAL`    | Polling interval in ms                               | `12000` (12 seconds)                           |
+
+**⚠️ All variables are required!** The app will fail to start with a clear error message if any are missing.
+
+**Network configuration** is shared with the web app via `@eldritchain/common`. Setting `NETWORK=polygonAmoy` automatically configures the correct RPC URL and chain ID.
+
+## Development
+
+### View MongoDB Data
+
+**Option 1: Command Line**
+```bash
+docker exec -it eldritchain-mongodb mongosh eldritchain
+```
+
+**Option 2: MongoDB Compass (Recommended)**
+- Download [MongoDB Compass](https://www.mongodb.com/products/compass)
+- Connect to `mongodb://localhost:27017/eldritchain`
+- Visual interface for browsing data
+
+### Stop MongoDB
+
+```bash
+docker compose down
+```
+
+### Reset Database
+
+```bash
+docker compose down -v  # Deletes all data
+docker compose up -d
+```
+
+## Production Deployment
+
+1. Use managed MongoDB (MongoDB Atlas, AWS DocumentDB)
+2. Set `MONGODB_URI` to production database
+3. Use a reliable RPC provider (Alchemy, Infura)
+4. Deploy to cloud (Railway, Render, AWS, etc.)
+5. Enable monitoring and logging
+
+## Troubleshooting
+
+**"Cannot connect to MongoDB"**
+- Ensure Docker is running
+- Run `docker compose up -d`
+- Check `docker compose ps`
+
+**"No events found"**
+- Verify `CONTRACT_ADDRESS` is correct
+- Check contract has been deployed and has summon events
+- Ensure `NETWORK` is correct and accessible
+- Check `START_BLOCK` - if set too high, you might be starting after all events
+
+**"Events are delayed"**
+- Adjust `POLL_INTERVAL` (lower = faster, but more RPC calls)
+- Use WebSocket RPC for real-time updates
+
+## Architecture
+
+```
+apps/indexer/
+├── src/
+│   ├── index.ts              # Main entry point
+│   ├── config.ts             # Configuration
+│   ├── db/
+│   │   ├── connection.ts     # MongoDB connection
+│   │   └── models.ts         # Mongoose models
+│   ├── indexer/
+│   │   └── event-listener.ts # Blockchain event listener
+│   └── api/
+│       └── server.ts         # Express API server
+├── docker-compose.yml        # MongoDB setup (use: docker compose)
+├── package.json
+└── tsconfig.json
+```
+

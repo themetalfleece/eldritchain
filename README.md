@@ -39,7 +39,10 @@ This is a monorepo containing two main applications:
 eldritchain/
 ├── apps/
 │   ├── contracts/   # Solidity smart contracts (Hardhat)
-│   └── web/         # Next.js frontend (React + Wagmi)
+│   ├── web/         # Next.js frontend (React + Wagmi)
+│   └── indexer/     # Backend API & event indexer (Node.js + MongoDB)
+├── packages/
+│   └── common/      # Shared constants, types, and utilities
 ├── package.json     # Root workspace configuration
 └── README.md        # This file
 ```
@@ -60,6 +63,20 @@ eldritchain/
 - Tailwind CSS for styling
 - Wagmi v2 + Viem for blockchain interaction
 - RainbowKit for wallet connection
+
+**Backend (Indexer):**
+
+- Node.js + TypeScript
+- Express REST API
+- MongoDB for event storage
+- Viem for blockchain event listening
+- Docker Compose for local MongoDB
+
+**Shared Package:**
+
+- `@eldritchain/common` - Centralized constants, types, and utilities
+- Single source of truth for creature ranges and rarity logic
+- Shared across all apps
 
 **Code Quality:**
 

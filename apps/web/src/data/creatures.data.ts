@@ -1,6 +1,7 @@
+import { type Rarity } from "@eldritchain/common";
 import creaturesJson from "./creatures.json";
 
-export type Rarity = "common" | "rare" | "epic" | "deity";
+export type { Rarity };
 
 export interface Creature {
   id: number;

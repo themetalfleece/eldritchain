@@ -4,11 +4,14 @@
   "private": true,
   "description": "A decentralized daily creature summoning dApp with eldritch horror twist",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "web": "yarn workspace @eldritchain/web",
     "contracts": "yarn workspace @eldritchain/contracts",
+    "indexer": "yarn workspace @eldritchain/indexer",
+    "common": "yarn workspace @eldritchain/common",
     "lint": "yarn workspaces run lint",
     "lint:fix": "yarn workspaces run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\" && prettier --write --plugin=prettier-plugin-solidity \"apps/contracts/contracts/**/*.sol\"",
