@@ -11,9 +11,23 @@ Backend service that indexes blockchain events and provides a high-performance l
 - 🐳 **Docker** - Easy MongoDB setup
 - 📜 **Event Sourcing** - Complete summon history with idempotent processing
 
+## Prerequisites
+
+- Node.js 22.14.0 (specified in `.nvmrc`)
+- Yarn package manager
+- MongoDB (via Docker or external service)
+
 ## Quick Start
 
-### 1. Start MongoDB
+### 1. Install Node.js Version
+
+```bash
+# Use the exact Node.js version
+nvm install
+nvm use
+```
+
+### 2. Start MongoDB
 
 ```bash
 cd apps/indexer
@@ -22,13 +36,13 @@ docker compose up -d
 
 This starts MongoDB on port 27017.
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 
 ```bash
 yarn install
 ```
 
-### 3. Configure Environment
+### 4. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -64,7 +78,7 @@ START_BLOCK=77678611
 START_BLOCK=5000000
 ```
 
-### 4. Run the Indexer
+### 5. Run the Indexer
 
 You can run both services together or separately:
 
@@ -104,6 +118,107 @@ yarn start:indexer
 - Restart indexer without affecting API
 - Better resource allocation
 - Easier debugging and monitoring
+
+## Docker Deployment 🐳
+
+### Build Docker Images
+
+From the **repository root**, build the images:
+
+```bash
+# Build API image
+docker build -f apps/indexer/Dockerfile.api -t eldritchain-api:latest .
+
+# Build Indexer image
+docker build -f apps/indexer/Dockerfile.indexer -t eldritchain-indexer:latest .
+```
+
+### Run with Docker Compose
+
+Create a `docker-compose.prod.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: eldritchain-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: your_secure_password
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  api:
+    image: eldritchain-api:latest
+    container_name: eldritchain-api
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      CONTRACT_ADDRESS: "0xYourContractAddress"
+      NETWORK: "polygonAmoy"
+      START_BLOCK: "12345678"
+      MONGODB_URI: "mongodb://admin:your_secure_password@mongodb:27017/eldritchain?authSource=admin"
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+
+  indexer:
+    image: eldritchain-indexer:latest
+    container_name: eldritchain-indexer
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      CONTRACT_ADDRESS: "0xYourContractAddress"
+      NETWORK: "polygonAmoy"
+      START_BLOCK: "12345678"
+      MONGODB_URI: "mongodb://admin:your_secure_password@mongodb:27017/eldritchain?authSource=admin"
+
+volumes:
+  mongodb_data:
+```
+
+Start all services:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Using Pre-built Images
+
+If pushing to Docker Hub:
+
+```bash
+# Tag images
+docker tag eldritchain-api:latest your-username/eldritchain-api:latest
+docker tag eldritchain-indexer:latest your-username/eldritchain-indexer:latest
+
+# Push to Docker Hub
+docker push your-username/eldritchain-api:latest
+docker push your-username/eldritchain-indexer:latest
+
+# Update docker-compose.prod.yml to use your images
+# image: your-username/eldritchain-api:latest
+# image: your-username/eldritchain-indexer:latest
+```
+
+### Docker Image Details
+
+**Both images use:**
+- Node.js 22.14.0 Alpine (small footprint)
+- Multi-stage builds (optimized size)
+- Production dependencies only
+- Non-root user for security
+
+**Image sizes:**
+- API: ~150MB
+- Indexer: ~150MB
 
 ## API Endpoints
 

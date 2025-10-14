@@ -1,0 +1,53 @@
+# Build stage
+FROM node:22.14.0-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy root package files
+COPY package.json yarn.lock ./
+COPY .yarnrc.yml ./
+
+# Copy workspace package files
+COPY packages/common/package.json ./packages/common/
+COPY apps/indexer/package.json ./apps/indexer/
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy source code
+COPY packages/common ./packages/common
+COPY apps/indexer ./apps/indexer
+
+# Build common package
+RUN yarn workspace @eldritchain/common build
+
+# Build indexer
+RUN yarn workspace @eldritchain/indexer build
+
+# Production stage
+FROM node:22.14.0-alpine
+
+WORKDIR /app
+
+# Copy root package files
+COPY package.json yarn.lock ./
+COPY .yarnrc.yml ./
+
+# Copy workspace package files
+COPY packages/common/package.json ./packages/common/
+COPY apps/indexer/package.json ./apps/indexer/
+
+# Install production dependencies only
+RUN yarn install --frozen-lockfile --production
+
+# Copy built files from builder
+COPY --from=builder /app/packages/common/dist ./packages/common/dist
+COPY --from=builder /app/apps/indexer/dist ./apps/indexer/dist
+
+# Set working directory to indexer
+WORKDIR /app/apps/indexer
+
+# Start event indexer
+CMD ["node", "dist/indexer.js"]
+
