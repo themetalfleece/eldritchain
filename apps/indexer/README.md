@@ -76,6 +76,11 @@ START_BLOCK=77678611
 
 # If deployed at block 5000000 on Polygon Amoy
 START_BLOCK=5000000
+
+# MongoDB with database name (important!)
+MONGODB_URI=mongodb://root:password@localhost:27017/eldritchain
+#                                                    ↑ Database name must be specified!
+#                                                    Without it, defaults to "test" database
 ```
 
 ### 5. Run the Indexer

@@ -93,7 +93,9 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
       if (logs.length > 0 && logs[0].topics.length >= 3) {
         // The creatureId is in topics[2] (second indexed parameter)
         const creatureIdHex = logs[0].topics[2];
-        if (!creatureIdHex) return;
+        if (!creatureIdHex) {
+          return;
+        }
 
         const creatureId = parseInt(creatureIdHex, 16);
         const creature = getCreature(creatureId);
