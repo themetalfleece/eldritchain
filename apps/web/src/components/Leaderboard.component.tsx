@@ -1,3 +1,4 @@
+import { getIndexerUrl } from "@/lib/api.utils";
 import { env } from "@/lib/env.config";
 import { type LeaderboardEntry } from "@eldritchain/common";
 import Link from "next/link";
@@ -9,12 +10,12 @@ async function fetchLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
   }
 
   try {
-    const response = await fetch(`${env.indexerApiUrl}/api/leaderboard?limit=${limit}`, {
+    const response = await fetch(getIndexerUrl(`/api/leaderboard?limit=${limit}`), {
       next: { revalidate: 60 },
     });
 
     if (!response.ok) {
-      console.error("Failed to fetch leaderboard:", response.statusText);
+      console.error("Failed to fetch leaderboard:", response);
       return [];
     }
 
