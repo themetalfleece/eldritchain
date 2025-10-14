@@ -58,15 +58,29 @@ cp .env.example .env
 2. Edit `.env` and fill in the required values:
 
 ```env
-# Your deployment wallet's private key (NEVER commit this!)
-PRIVATE_KEY=your_private_key_here
+# REQUIRED - Your deployment wallet's private key (NEVER commit this!)
+PRIVATE_KEY=your_private_key_without_0x_prefix
 
-# Sepolia RPC URL from Alchemy or Infura
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your_api_key
+# OPTIONAL - Network to deploy to (defaults to polygonAmoy)
+# Options: "polygonAmoy" | "polygon" | "sepolia" | "mainnet"
+NETWORK=polygonAmoy
 
-# Etherscan API key for contract verification
+# OPTIONAL - Etherscan API key for contract verification
 ETHERSCAN_API_KEY=your_etherscan_api_key
+
+# OPTIONAL - Only needed for upgrades
+PROXY_ADDRESS=
 ```
+
+**Network Configuration:**
+
+Networks are configured via `@eldritchain/common` - no need to manually set RPC URLs! Just set `NETWORK` and the RPC URL is automatically loaded from viem's built-in chains.
+
+**Available networks:**
+- `polygonAmoy` - Polygon Amoy testnet ⭐ (default, free, uses public RPC)
+- `polygon` - Polygon mainnet ($0.01-0.05 per transaction)
+- `sepolia` - Ethereum Sepolia testnet (free, uses public RPC)
+- `mainnet` - Ethereum mainnet ($2-10 per transaction)
 
 ### Getting Required Credentials
 
@@ -75,23 +89,23 @@ ETHERSCAN_API_KEY=your_etherscan_api_key
 - Export from MetaMask: Settings > Security & Privacy > Reveal Private Key
 - ⚠️ **NEVER share this or commit it to git!**
 - ⚠️ **Use a separate wallet for development, not your main wallet!**
+- Enter WITHOUT the "0x" prefix
 
-**Sepolia RPC URL:**
+**Get Test Tokens:**
 
-1. Sign up for free at [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/)
-2. Create a new app/project
-3. Select "Sepolia" as the network
-4. Copy the HTTP endpoint URL
+For Polygon Amoy (default):
+- Get test POL from https://faucet.polygon.technology/
+- Free and instant!
 
-**Sepolia ETH:**
-
-- Use a faucet: https://sepoliafaucet.com/
-- Or: https://www.alchemy.com/faucets/ethereum-sepolia
+For Sepolia:
+- Use https://sepoliafaucet.com/
+- Or https://www.alchemy.com/faucets/ethereum-sepolia
 - You'll need ~0.01 ETH for deployment
 
-**Etherscan API Key:**
+**Etherscan API Key (Optional):**
 
-1. Create account at https://etherscan.io/
+Only needed for contract verification:
+1. Create account at https://etherscan.io/ (or Polygonscan for Polygon)
 2. Go to API Keys section
 3. Create a new API key (free)
 
@@ -169,7 +183,7 @@ yarn deploy
 This will:
 
 1. Compile the contract
-2. Deploy to your configured network (from `DEFAULT_NETWORK` in `.env`)
+2. Deploy to your configured network (from `NETWORK` in `.env`, defaults to `polygonAmoy`)
 3. Output the deployed contract address
 
 **Save the contract address!** You'll need it for the frontend.
@@ -296,7 +310,8 @@ Approximate gas costs on Sepolia (will vary with network conditions):
 
 - Verify your `.env` file is configured correctly
 - Check your private key is valid (without "0x" prefix)
-- Ensure RPC URL is correct and accessible
+- Ensure `NETWORK` is set to a valid network name
+- Check you have test tokens for the network
 
 **Contract verification fails:**
 

@@ -1,20 +1,23 @@
+import { assertEnv } from "@eldritchain/common";
+import * as dotenv from "dotenv";
 import { ethers, upgrades } from "hardhat";
-import { env } from "../env.config";
+
+dotenv.config();
 
 async function main() {
-  if (!env.proxyAddress) {
-    throw new Error("Please set PROXY_ADDRESS in .env");
-  }
+  // Validate required env vars for upgrade
+  assertEnv(process.env.PRIVATE_KEY, "PRIVATE_KEY");
+  const proxyAddress = assertEnv(process.env.PROXY_ADDRESS, "PROXY_ADDRESS") as `0x${string}`;
 
-  console.log(`Upgrading Eldritchain at ${env.proxyAddress}...`);
+  console.log(`Upgrading Eldritchain at ${proxyAddress}...`);
 
   const EldritchainV2 = await ethers.getContractFactory("Eldritchain");
-  const upgraded = await upgrades.upgradeProxy(env.proxyAddress, EldritchainV2);
+  const upgraded = await upgrades.upgradeProxy(proxyAddress, EldritchainV2);
 
   await upgraded.waitForDeployment();
 
   console.log("Contract upgraded successfully!");
-  console.log(`Proxy address (unchanged): ${env.proxyAddress}`);
+  console.log(`Proxy address (unchanged): ${proxyAddress}`);
   console.log(`New implementation deployed`);
 }
 

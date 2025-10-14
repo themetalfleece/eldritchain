@@ -1,3 +1,4 @@
+import { networks, type NetworkName } from "@eldritchain/common";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
@@ -5,6 +6,16 @@ import * as dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 
 dotenv.config();
+
+// Helper to get RPC URL from network config
+function getRpcUrl(networkName: NetworkName): string {
+  const network = networks[networkName];
+  return network.chain.rpcUrls.default.http[0];
+}
+
+const networkName = (process.env.NETWORK || "polygonAmoy") as NetworkName;
+const privateKey = process.env.PRIVATE_KEY || "";
+const accounts = privateKey ? [privateKey] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -16,40 +27,30 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: process.env.DEFAULT_NETWORK || "hardhat",
+  defaultNetwork: networkName,
   networks: {
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      url: getRpcUrl("sepolia"),
+      accounts,
     },
     mainnet: {
-      url: process.env.MAINNET_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      url: getRpcUrl("mainnet"),
+      accounts,
     },
     polygon: {
-      url: process.env.POLYGON_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      url: getRpcUrl("polygon"),
+      accounts,
     },
-    arbitrum: {
-      url: process.env.ARBITRUM_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-    },
-    base: {
-      url: process.env.BASE_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    polygonAmoy: {
+      url: getRpcUrl("polygonAmoy"),
+      accounts,
     },
     localhost: {
       url: "http://127.0.0.1:8545",
     },
   },
   etherscan: {
-    apiKey: {
-      sepolia: process.env.ETHERSCAN_API_KEY || "",
-      mainnet: process.env.ETHERSCAN_API_KEY || "",
-      polygon: process.env.POLYGONSCAN_API_KEY || "",
-      arbitrumOne: process.env.ARBISCAN_API_KEY || "",
-      base: process.env.BASESCAN_API_KEY || "",
-    },
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
   },
 };
 

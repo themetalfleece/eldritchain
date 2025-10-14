@@ -1,16 +1,19 @@
+import { assertEnv } from "@eldritchain/common";
+import * as dotenv from "dotenv";
 import * as fs from "fs";
 import { ethers } from "hardhat";
 import * as path from "path";
-import { env } from "../env.config";
+
+dotenv.config();
 
 async function main() {
-  if (!env.proxyAddress) {
-    throw new Error("Please set PROXY_ADDRESS in .env");
-  }
+  // Validate required env vars
+  assertEnv(process.env.PRIVATE_KEY, "PRIVATE_KEY");
+  const proxyAddress = assertEnv(process.env.PROXY_ADDRESS, "PROXY_ADDRESS") as `0x${string}`;
 
-  console.log(`Syncing creatures from data file to contract at ${env.proxyAddress}...`);
+  console.log(`Syncing creatures from data file to contract at ${proxyAddress}...`);
 
-  const Eldritchain = await ethers.getContractAt("Eldritchain", env.proxyAddress);
+  const Eldritchain = await ethers.getContractAt("Eldritchain", proxyAddress);
 
   // Read creatures from JSON file
   const creaturesPath = path.join(__dirname, "../../web/src/data/creatures.json");
