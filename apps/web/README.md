@@ -145,6 +145,50 @@ yarn web start
 yarn start
 ```
 
+## Docker Deployment 🐳
+
+### Build Docker Image
+
+From the **repository root**, build the image:
+
+```bash
+docker build -f apps/web/Dockerfile -t eldritchain-web:latest .
+```
+
+### Run with Docker
+
+```bash
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_CONTRACT_ADDRESS=0xYourContractAddress \
+  -e NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_wc_project_id \
+  -e NEXT_PUBLIC_NETWORK=polygonAmoy \
+  -e NEXT_PUBLIC_INDEXER_API_URL=https://your-indexer-url.com \
+  eldritchain-web:latest
+```
+
+Start the service:
+
+```bash
+docker compose up -d
+```
+
+### Docker Image Details
+
+- **Base**: Node.js 22.14.0 Alpine (~50MB base)
+- **Multi-stage build**: Optimized for production
+- **Size**: ~200MB (includes Next.js standalone output)
+- **Port**: 3000
+
+### Pushing to Docker Hub
+
+```bash
+# Tag image
+docker tag eldritchain-web:latest your-username/eldritchain-web:latest
+
+# Push to Docker Hub
+docker push your-username/eldritchain-web:latest
+```
+
 ## Code Quality
 
 The project includes automated code quality tools:
