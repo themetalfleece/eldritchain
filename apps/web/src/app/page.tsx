@@ -1,6 +1,7 @@
 "use client";
 
 import { Collection } from "@/components/Collection.component";
+import { Leaderboard } from "@/components/Leaderboard.component";
 import { ShareCollectionButton } from "@/components/ShareCollectionButton.component";
 import { SummonButton } from "@/components/SummonButton.component";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -39,6 +40,10 @@ export default function Home() {
 
         <div className={styles.main.collectionSection}>
           <Collection refreshTrigger={refreshTrigger} showOwnCollectionOnly />
+        </div>
+
+        <div className={styles.main.leaderboardSection}>
+          <Leaderboard limit={10} />
         </div>
       </main>
 

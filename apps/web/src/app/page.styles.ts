@@ -15,11 +15,12 @@ export const styles = {
       title: "text-5xl font-bold mb-4",
       description: "text-gray-400 text-lg max-w-2xl mx-auto",
     },
-    summonSection: "flex justify-center mb-16",
-    collectionSection: "max-w-7xl mx-auto",
+    summonSection: "flex flex-col items-center mb-16",
+    collectionSection: "max-w-7xl mx-auto mb-16",
+    leaderboardSection: "max-w-7xl mx-auto mb-16",
   },
 
   footer: {
-    container: "container mx-auto px-4 py-8 text-center text-gray-500 text-sm",
+    container: "container mx-auto px-4 py-8 text-center text-gray-500 text-sm mt-auto",
   },
 };

@@ -48,12 +48,14 @@ START_BLOCK=12345678  # Replace with your deployment block number
 **💡 Pro Tip:** Always set `START_BLOCK` to your contract's deployment block! This avoids scanning millions of empty blocks.
 
 **How to find your deployment block:**
+
 1. Go to your contract on the block explorer (e.g., https://amoy.polygonscan.com/address/0xYourAddress)
 2. Click on the contract creation transaction
 3. Note the block number
 4. Set `START_BLOCK=<that_block_number>` in your `.env`
 
 **Examples:**
+
 ```env
 # If deployed at block 77678611 on mainnet
 START_BLOCK=77678611
@@ -76,11 +78,13 @@ yarn start
 ## API Endpoints
 
 ### Health Check
+
 ```
 GET /health
 ```
 
 ### Get Leaderboard
+
 ```
 GET /api/leaderboard?limit=100
 ```
@@ -88,6 +92,7 @@ GET /api/leaderboard?limit=100
 Aggregates user stats from all summon events and ranks them.
 
 Response:
+
 ```json
 {
   "success": true,
@@ -107,6 +112,7 @@ Response:
 ```
 
 ### Get User Stats
+
 ```
 GET /api/user/:address
 ```
@@ -114,6 +120,7 @@ GET /api/user/:address
 Aggregates stats for a specific user including their rank.
 
 Response:
+
 ```json
 {
   "success": true,
@@ -131,6 +138,7 @@ Response:
 ```
 
 ### Get User Summon History
+
 ```
 GET /api/user/:address/history?limit=50&skip=0
 ```
@@ -138,6 +146,7 @@ GET /api/user/:address/history?limit=50&skip=0
 Returns paginated list of all summon events for a user.
 
 Response:
+
 ```json
 {
   "success": true,
@@ -162,11 +171,13 @@ Response:
 ```
 
 ### Get Global Stats
+
 ```
 GET /api/stats
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -206,14 +217,16 @@ Each summon is stored as an individual event:
 ```
 
 **Benefits:**
+
 - Complete summon history per user
-- Time-series analytics capabilities  
+- Time-series analytics capabilities
 - Easy to rebuild aggregations
 - Idempotent event processing
 
 ## Leaderboard Ranking
 
 Users are ranked by:
+
 1. **Deity count** (highest priority)
 2. **Epic count** (if deity count is tied)
 3. **Rare count** (if epic count is tied)
@@ -241,11 +254,13 @@ Environment variables in `.env` (all REQUIRED):
 ### View MongoDB Data
 
 **Option 1: Command Line**
+
 ```bash
 docker exec -it eldritchain-mongodb mongosh eldritchain
 ```
 
 **Option 2: MongoDB Compass (Recommended)**
+
 - Download [MongoDB Compass](https://www.mongodb.com/products/compass)
 - Connect to `mongodb://localhost:27017/eldritchain`
 - Visual interface for browsing data
@@ -274,17 +289,20 @@ docker compose up -d
 ## Troubleshooting
 
 **"Cannot connect to MongoDB"**
+
 - Ensure Docker is running
 - Run `docker compose up -d`
 - Check `docker compose ps`
 
 **"No events found"**
+
 - Verify `CONTRACT_ADDRESS` is correct
 - Check contract has been deployed and has summon events
 - Ensure `NETWORK` is correct and accessible
 - Check `START_BLOCK` - if set too high, you might be starting after all events
 
 **"Events are delayed"**
+
 - Adjust `POLL_INTERVAL` (lower = faster, but more RPC calls)
 - Use WebSocket RPC for real-time updates
 
@@ -306,4 +324,3 @@ apps/indexer/
 ├── package.json
 └── tsconfig.json
 ```
-

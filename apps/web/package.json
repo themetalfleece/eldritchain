@@ -14,25 +14,26 @@
   "dependencies": {
     "@eldritchain/common": "1.0.0",
     "@rainbow-me/rainbowkit": "^2.1.0",
+    "@tailwindcss/postcss": "^4.1.14",
     "@tanstack/react-query": "^5.28.0",
     "clsx": "^2.1.1",
     "next": "^15.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "viem": "^2.9.0",
+    "viem": "^2.38.2",
     "wagmi": "^2.5.0"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.4.0",
-    "eslint": "^8",
-    "eslint-config-next": "^15.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "postcss": "^8.4.0",
-    "prettier": "^3.0.0",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5"
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.37.0",
+    "eslint-config-next": "^15.5.5",
+    "eslint-config-prettier": "^10.1.8",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
   }
 }

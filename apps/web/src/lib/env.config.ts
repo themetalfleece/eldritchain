@@ -13,4 +13,6 @@ export const env = {
   ),
 
   network: assertEnv(process.env.NEXT_PUBLIC_NETWORK, "NEXT_PUBLIC_NETWORK") as NetworkName,
+
+  indexerApiUrl: process.env.NEXT_PUBLIC_INDEXER_API_URL?.trim() || null,
 };

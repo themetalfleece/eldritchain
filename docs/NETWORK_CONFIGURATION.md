@@ -80,18 +80,18 @@ import { polygon, arbitrum, base } from "viem/chains";
 export const networks = {
   mainnet: { ... },
   sepolia: { ... },
-  
+
   // Add new networks
   polygon: {
     chain: polygon,
     isTestnet: false,
   },
-  
+
   arbitrum: {
     chain: arbitrum,
     isTestnet: false,
   },
-  
+
   base: {
     chain: base,
     isTestnet: false,

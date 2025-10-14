@@ -5,6 +5,7 @@ Shared constants, types, and utilities for the Eldritchain monorepo.
 ## Purpose
 
 Single source of truth for:
+
 - Creature ID ranges and rarity constants
 - Rarity calculation logic
 - Network configurations (viem chains)
@@ -33,12 +34,12 @@ const valid = isValidCreatureId(1601); // true
 
 // Access ranges
 console.log(creatureRanges.deity.base); // 1600
-console.log(creatureRanges.deity.max);  // 1649
+console.log(creatureRanges.deity.max); // 1649
 
 // Get network configuration
 const network = getNetwork("polygonAmoy");
-console.log(network.chain.id);        // 80002
-console.log(network.chain.rpcUrls);   // RPC URLs from viem
+console.log(network.chain.id); // 80002
+console.log(network.chain.rpcUrls); // RPC URLs from viem
 
 // Validate environment variables
 const port = assertEnvInt(process.env.PORT, "PORT");
@@ -48,6 +49,7 @@ const address = assertEnvAddress(process.env.CONTRACT, "CONTRACT");
 ## Exported Constants
 
 ### `creatureRanges`
+
 ```typescript
 {
   common: { base: 0, max: 999, namespaceSize: 1000 },
@@ -58,8 +60,9 @@ const address = assertEnvAddress(process.env.CONTRACT, "CONTRACT");
 ```
 
 ### `rarityTiers`
+
 ```typescript
-["common", "rare", "epic", "deity"]
+["common", "rare", "epic", "deity"];
 ```
 
 ## Exported Functions
@@ -90,6 +93,7 @@ Parses and validates a required bigint environment variable.
 Validates a required Ethereum address (0x... format, 42 characters).
 
 Example usage:
+
 ```typescript
 import { assertEnv, assertEnvAddress } from "@eldritchain/common";
 
@@ -116,4 +120,3 @@ yarn build
 # Watch mode (for development)
 yarn dev
 ```
-

@@ -53,6 +53,10 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 # Network (REQUIRED)
 # Options: "polygonAmoy" | "polygon" | "sepolia" | "mainnet"
 NEXT_PUBLIC_NETWORK=polygonAmoy
+
+# Indexer API URL (OPTIONAL - for leaderboard)
+# Leave empty to hide leaderboard
+NEXT_PUBLIC_INDEXER_API_URL=http://localhost:3001
 ```
 
 ### Getting Required Credentials
@@ -75,12 +79,21 @@ NEXT_PUBLIC_NETWORK=polygonAmoy
 **Network Selection:**
 
 Simply set `NEXT_PUBLIC_NETWORK` to:
+
 - `polygonAmoy` - Polygon Amoy testnet (recommended for testing - cheap gas!)
 - `polygon` - Polygon mainnet (recommended for production - $0.01-0.05 per transaction)
 - `sepolia` - Ethereum Sepolia testnet (free, uses [public RPC](https://ethereum-sepolia-rpc.publicnode.com))
 - `mainnet` - Ethereum mainnet (expensive - $2-10 per transaction)
 
-Network configurations are predefined in `src/config/networks.config.ts`. To add more networks, edit that file.
+Network configurations are predefined in `@eldritchain/common`. To add more networks, edit `packages/common/src/config/networks.ts`.
+
+**Indexer API (Optional):**
+
+Set `NEXT_PUBLIC_INDEXER_API_URL` to enable the leaderboard feature:
+
+- Local development: `http://localhost:3001`
+- Production: Your deployed indexer URL
+- Leave empty to hide the leaderboard
 
 **After adding/changing env vars, restart the dev server!**
 

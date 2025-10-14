@@ -71,6 +71,7 @@ cp .env.example .env.local
 ```
 
 Example `.env.local`:
+
 ```env
 NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
@@ -78,6 +79,7 @@ NEXT_PUBLIC_NETWORK=polygonAmoy
 ```
 
 **Getting Test Tokens:**
+
 - **Polygon Amoy**: Get test POL from https://faucet.polygon.technology/
 - **Sepolia**: Get test ETH from https://sepoliafaucet.com/
 

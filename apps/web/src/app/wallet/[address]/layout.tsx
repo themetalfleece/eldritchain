@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: { address: string };
+  params: Promise<{ address: string }>;
 }): Promise<Metadata> {
+  const { address } = await params;
+
   return {
-    title: `Wallet ${params.address.slice(0, 6)}...${params.address.slice(-4)} - Eldritchain`,
-    description: `View the Eldritchain creature collection for wallet ${params.address}`,
+    title: `Wallet ${address.slice(0, 6)}...${address.slice(-4)} - Eldritchain`,
+    description: `View the Eldritchain creature collection for wallet ${address}`,
   };
 }
 
