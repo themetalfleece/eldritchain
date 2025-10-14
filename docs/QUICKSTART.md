@@ -62,13 +62,22 @@ Eldritchain deployed to: 0x1234567890abcdef1234567890abcdef12345678
 cd ../web
 
 # Copy environment template
-cp .env.example .env
+cp .env.example .env.local
 
-# Edit .env and add:
+# Edit .env.local and add:
 # - Contract address from Step 3
 # - WalletConnect Project ID (get from https://cloud.walletconnect.com/)
-# - Optional: Sepolia RPC URL
+# - Network: "sepolia" for testnet or "mainnet" for production
 ```
+
+Example `.env.local`:
+```env
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+NEXT_PUBLIC_NETWORK=sepolia
+```
+
+Note: Sepolia uses a free public RPC ([publicnode.com](https://ethereum-sepolia-rpc.publicnode.com)), so no API key needed!
 
 ## Step 5: Run the App! (1 min)
 
@@ -100,7 +109,7 @@ Open http://localhost:3000 in your browser!
 
 - Install MetaMask or another Web3 wallet
 - Get a WalletConnect Project ID from https://cloud.walletconnect.com/
-- Add it to `apps/web/.env`
+- Add it to `apps/web/.env.local`
 
 **Summon button disabled:**
 

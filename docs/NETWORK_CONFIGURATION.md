@@ -1,181 +1,143 @@
 # Network Configuration
 
-Switch between any EVM chain by changing `.env` files only - no code changes needed!
+Eldritchain uses a config-based network system. Switch networks by changing one environment variable!
 
 ## Quick Network Switch
 
-Edit `apps/web/.env`:
+Edit `apps/web/.env.local`:
 
 ```env
-NEXT_PUBLIC_CHAIN_ID=<chain_id>
-NEXT_PUBLIC_CHAIN_NAME=<network_name>
-NEXT_PUBLIC_RPC_URL=<your_rpc_url>
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=<explorer_url>
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=<currency_name>
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=<currency_symbol>
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
+# Just change this one line!
+NEXT_PUBLIC_NETWORK=sepolia  # or "mainnet"
 ```
 
-Edit `apps/contracts/.env`:
+That's it! Network details (RPC URLs, chain IDs, explorers) are predefined in `apps/web/src/config/networks.config.ts`.
 
-```env
-DEFAULT_NETWORK=<network_name>
-<NETWORK_NAME>_RPC_URL=<your_rpc_url>
-```
-
-## Pre-Configured Networks
+## Built-in Networks
 
 ### Sepolia Testnet (Default)
 
 ```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=11155111
-NEXT_PUBLIC_CHAIN_NAME=Sepolia
-NEXT_PUBLIC_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://sepolia.etherscan.io
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Sepolia ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=SepoliaETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
-
-# Contracts (.env)
-DEFAULT_NETWORK=sepolia
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
+NEXT_PUBLIC_NETWORK=sepolia
 ```
 
-**Get test ETH:** https://sepoliafaucet.com/
+- **Chain ID**: 11155111
+- **RPC**: https://ethereum-sepolia-rpc.publicnode.com (free public RPC)
+- **Explorer**: https://sepolia.etherscan.io
+- **Faucet**: https://sepoliafaucet.com/
 
 ### Ethereum Mainnet
 
 ```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=1
-NEXT_PUBLIC_CHAIN_NAME=Ethereum
-NEXT_PUBLIC_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://etherscan.io
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Ether
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
-
-# Contracts (.env)
-DEFAULT_NETWORK=mainnet
-MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-ETHERSCAN_API_KEY=your_etherscan_api_key
+NEXT_PUBLIC_NETWORK=mainnet
 ```
 
-### Polygon
+- **Chain ID**: 1
+- **RPC**: Uses default mainnet RPC from viem
+- **Explorer**: https://etherscan.io
+
+## Adding More Networks
+
+To add support for additional networks (Polygon, Arbitrum, Base, etc.):
+
+1. Edit `apps/web/src/config/networks.config.ts`:
+
+```typescript
+import { polygon, arbitrum, base } from "viem/chains";
+
+export const networks = {
+  mainnet: { ... },
+  sepolia: { ... },
+  
+  // Add new networks
+  polygon: {
+    chain: polygon,
+    isTestnet: false,
+  },
+  
+  arbitrum: {
+    chain: arbitrum,
+    isTestnet: false,
+  },
+  
+  base: {
+    chain: base,
+    isTestnet: false,
+  },
+} as const;
+```
+
+2. Update your `.env.local`:
 
 ```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=137
-NEXT_PUBLIC_CHAIN_NAME=Polygon
-NEXT_PUBLIC_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://polygonscan.com
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=MATIC
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=MATIC
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
-
-# Contracts (.env)
-DEFAULT_NETWORK=polygon
-POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-POLYGONSCAN_API_KEY=your_polygonscan_api_key
+NEXT_PUBLIC_NETWORK=polygon
 ```
 
-**Lower gas fees than Ethereum!**
+That's it! All chain details come from [viem's built-in chains](https://viem.sh/docs/chains/introduction.html).
 
-### Arbitrum One
+## Custom RPC Endpoints
 
-```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=42161
-NEXT_PUBLIC_CHAIN_NAME=Arbitrum One
-NEXT_PUBLIC_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://arbiscan.io
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Ether
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
+To override the default RPC (e.g., use your own Alchemy/Infura key):
 
-# Contracts (.env)
-DEFAULT_NETWORK=arbitrum
-ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-ARBISCAN_API_KEY=your_arbiscan_api_key
+```typescript
+// apps/web/src/config/networks.config.ts
+export const networks = {
+  mainnet: {
+    chain: {
+      ...mainnet,
+      rpcUrls: {
+        default: {
+          http: ["https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"],
+        },
+      },
+    },
+    isTestnet: false,
+  },
+} as const;
 ```
 
-**Layer 2 with low fees!**
+## Multi-Chain Deployment
 
-### Base
+To deploy on multiple chains:
 
-```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=8453
-NEXT_PUBLIC_CHAIN_NAME=Base
-NEXT_PUBLIC_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://basescan.org
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Ether
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
-
-# Contracts (.env)
-DEFAULT_NETWORK=base
-BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY
-BASESCAN_API_KEY=your_basescan_api_key
-```
-
-**Coinbase's L2 network!**
-
-### Local Development (Hardhat/Anvil)
-
-```env
-# Web App (.env)
-NEXT_PUBLIC_CHAIN_ID=31337
-NEXT_PUBLIC_CHAIN_NAME=Localhost
-NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8545
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Ether
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
-
-# Contracts (.env)
-DEFAULT_NETWORK=localhost
-```
-
-**Start local node:**
+1. Deploy contract to each chain (see `apps/contracts/README.md`)
+2. Save each contract address
+3. Switch networks in web app by changing `.env.local`:
 
 ```bash
-cd apps/contracts
-yarn hardhat node
+# For Sepolia deployment
+NEXT_PUBLIC_CONTRACT_ADDRESS=0xSepoliaAddress...
+NEXT_PUBLIC_NETWORK=sepolia
+
+# For Mainnet deployment
+NEXT_PUBLIC_CONTRACT_ADDRESS=0xMainnetAddress...
+NEXT_PUBLIC_NETWORK=mainnet
 ```
 
-## Adding Custom Network
-
-1. Get chain info from [ChainList](https://chainlist.org/)
-2. Add network to `apps/contracts/hardhat.config.ts`
-3. Update both `.env` files with chain details
-4. Deploy: `yarn deploy`
-
-## RPC Providers
-
-Get free API keys:
-
-- [Alchemy](https://www.alchemy.com/) (recommended)
-- [Infura](https://infura.io/)
-
-## Gas Costs
+## Gas Costs Comparison
 
 | Network          | Deploy  | Per Summon |
 | ---------------- | ------- | ---------- |
 | Ethereum Mainnet | $50-200 | $5-20      |
 | Polygon          | < $1    | < $0.05    |
 | Arbitrum/Base    | $1-5    | $0.10-0.50 |
-| Testnet          | FREE    | FREE       |
+| Sepolia Testnet  | Free    | Free       |
 
-**Recommendation:** Use Polygon or Base for low costs!
+## RPC Providers
 
-## Troubleshooting
+Sepolia uses a free public RPC by default. For mainnet and other networks, consider getting API keys from:
 
-**Wrong network?** Switch in your wallet to match `.env` config
+- [Alchemy](https://www.alchemy.com/) (recommended)
+- [Infura](https://infura.io/)
+- [PublicNode](https://ethereum-sepolia-rpc.publicnode.com) (free public RPCs)
 
-**RPC errors?** Check your RPC URL is correct and accessible
+## Available Chains in Viem
 
-**Transaction fails?** Ensure you have native tokens for gas
+Viem provides built-in configurations for 100+ chains. See the [full list](https://viem.sh/docs/chains/introduction.html):
 
-**More help:** Check [ChainList](https://chainlist.org/) for network details
+- Ethereum (mainnet, sepolia, holesky, goerli)
+- Layer 2s (Arbitrum, Optimism, Base, zkSync)
+- Alt L1s (Polygon, Avalanche, BNB Chain)
+- And many more!
+
+Simply import them and add to `networks.config.ts`.

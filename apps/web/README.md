@@ -41,27 +41,18 @@ yarn web format        # Format code
 cp .env.example .env.local
 ```
 
-1. Edit `.env.local` and fill in the required values:
+2. Edit `.env.local` and fill in the required values:
 
 ```env
-# Your deployed contract address from apps/contracts (REQUIRED)
+# Contract Address (REQUIRED)
 NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
 
-# RPC URL (REQUIRED)
-NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
-
-# WalletConnect Project ID (REQUIRED - get from https://cloud.walletconnect.com/)
+# WalletConnect Project ID (REQUIRED)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
-# Chain Configuration (REQUIRED)
-NEXT_PUBLIC_CHAIN_ID=11155111
-NEXT_PUBLIC_CHAIN_NAME=Sepolia
-NEXT_PUBLIC_BLOCK_EXPLORER_URL=https://sepolia.etherscan.io
-
-# Native Currency (REQUIRED)
-NEXT_PUBLIC_NATIVE_CURRENCY_NAME=Sepolia ETH
-NEXT_PUBLIC_NATIVE_CURRENCY_SYMBOL=SepoliaETH
-NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
+# Network (REQUIRED)
+# Options: "sepolia" | "mainnet"
+NEXT_PUBLIC_NETWORK=sepolia
 ```
 
 ### Getting Required Credentials
@@ -73,32 +64,23 @@ NEXT_PUBLIC_NATIVE_CURRENCY_DECIMALS=18
 - Or find it on [Sepolia Etherscan](https://sepolia.etherscan.io/)
 - Add to `.env.local` as `NEXT_PUBLIC_CONTRACT_ADDRESS`
 
-**WalletConnect Project ID:**
+**WalletConnect Project ID (Required):**
 
 1. Visit https://cloud.walletconnect.com/
 2. Sign up for a free account
 3. Create a new project
 4. Copy the Project ID
+5. Add to `.env.local` as `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
 
-**RPC URL (Required):**
+**Network Selection:**
 
-- Get a free API key from:
-  - [Alchemy](https://www.alchemy.com/)
-  - [Infura](https://infura.io/)
-- Select your target network (Sepolia, Mainnet, Polygon, etc.)
-- Add to `.env.local` as `NEXT_PUBLIC_RPC_URL`
-- **After adding/changing env vars, restart the dev server!**
+Simply set `NEXT_PUBLIC_NETWORK` to either:
+- `sepolia` - Ethereum Sepolia testnet (uses [public RPC](https://ethereum-sepolia-rpc.publicnode.com))
+- `mainnet` - Ethereum mainnet
 
-**Network Configuration:**
+Network configurations are predefined in `src/config/networks.config.ts`. To add more networks, edit that file.
 
-The dApp is fully network-agnostic! Configure any EVM chain by setting:
-
-- `NEXT_PUBLIC_CHAIN_ID` - Chain ID (e.g., 11155111 for Sepolia)
-- `NEXT_PUBLIC_CHAIN_NAME` - Display name
-- `NEXT_PUBLIC_RPC_URL` - RPC endpoint
-- `NEXT_PUBLIC_BLOCK_EXPLORER_URL` - Block explorer
-
-See [docs/NETWORK_CONFIGURATION.md](../../docs/NETWORK_CONFIGURATION.md) for examples.
+**After adding/changing env vars, restart the dev server!**
 
 ## Development
 
@@ -117,7 +99,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Development Workflow
 
 1. Connect your wallet (MetaMask or other Web3 wallet)
-2. Ensure you're on Sepolia network
+2. Ensure you're on the correct network (Sepolia testnet by default)
 3. Click "Summon Creature" button
 4. Confirm transaction in wallet
 5. Wait for transaction confirmation
