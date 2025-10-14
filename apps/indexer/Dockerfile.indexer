@@ -1,18 +1,23 @@
 # Build stage
 FROM node:22.14.0-alpine AS builder
 
+# Enable Corepack for Yarn 4
+RUN corepack enable
+
 # Set working directory
 WORKDIR /app
 
 # Copy root package files
 COPY package.json yarn.lock .yarnrc.yml ./
 
-# Copy workspace package files
+# Copy ALL workspace package.json files (Yarn needs to see the full workspace structure)
 COPY packages/common/package.json ./packages/common/
+COPY apps/contracts/package.json ./apps/contracts/
+COPY apps/web/package.json ./apps/web/
 COPY apps/indexer/package.json ./apps/indexer/
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
+# Install dependencies for indexer and common workspaces only (with lockfile verification)
+RUN yarn workspaces focus @eldritchain/indexer @eldritchain/common
 
 # Copy source code
 COPY packages/common ./packages/common
@@ -27,17 +32,22 @@ RUN yarn workspace @eldritchain/indexer build
 # Production stage
 FROM node:22.14.0-alpine
 
+# Enable Corepack for Yarn 4
+RUN corepack enable
+
 WORKDIR /app
 
 # Copy root package files
 COPY package.json yarn.lock .yarnrc.yml ./
 
-# Copy workspace package files
+# Copy ALL workspace package.json files (Yarn needs to see the full workspace structure)
 COPY packages/common/package.json ./packages/common/
+COPY apps/contracts/package.json ./apps/contracts/
+COPY apps/web/package.json ./apps/web/
 COPY apps/indexer/package.json ./apps/indexer/
 
-# Install production dependencies only
-RUN yarn install --frozen-lockfile --production
+# Install production dependencies for indexer and common workspaces only (with lockfile verification)
+RUN yarn workspaces focus --production @eldritchain/indexer @eldritchain/common
 
 # Copy built files from builder
 COPY --from=builder /app/packages/common/dist ./packages/common/dist
