@@ -1,26 +1,16 @@
-"use client";
-
-import { Collection } from "@/components/Collection.component";
+import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
+import { InteractiveSection } from "@/components/InteractiveSection.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
-import { ShareCollectionButton } from "@/components/ShareCollectionButton.component";
-import { SummonButton } from "@/components/SummonButton.component";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState } from "react";
+import { Suspense } from "react";
 import { styles } from "./page.styles";
 
 export default function Home() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleSummonComplete = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
   return (
     <div className={styles.container}>
       <header className={styles.header.container}>
         <div className={styles.header.inner}>
           <h1 className={styles.header.title}>Eldritchain</h1>
-          <ConnectButton />
+          <ConnectButtonClient />
         </div>
       </header>
 
@@ -33,23 +23,32 @@ export default function Home() {
           </p>
         </div>
 
-        <div className={styles.main.summonSection}>
-          <SummonButton onSummonComplete={handleSummonComplete} />
-          <ShareCollectionButton />
-        </div>
-
-        <div className={styles.main.collectionSection}>
-          <Collection refreshTrigger={refreshTrigger} showOwnCollectionOnly />
-        </div>
+        <InteractiveSection
+          summonSectionStyles={styles.main.summonSection}
+          collectionSectionStyles={styles.main.collectionSection}
+        />
 
         <div className={styles.main.leaderboardSection}>
-          <Leaderboard limit={10} />
+          <Suspense fallback={<LeaderboardLoading />}>
+            <Leaderboard limit={10} />
+          </Suspense>
         </div>
       </main>
 
       <footer className={styles.footer.container}>
         <p>Eldritchain - A decentralized creature collection game</p>
       </footer>
+    </div>
+  );
+}
+
+function LeaderboardLoading() {
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+        🏆 Leaderboard
+      </h2>
+      <div className="text-center py-12 text-purple-300 text-lg">Loading leaderboard...</div>
     </div>
   );
 }

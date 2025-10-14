@@ -8,16 +8,22 @@ async function fetchLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
     return [];
   }
 
-  const response = await fetch(`${env.indexerApiUrl}/api/leaderboard?limit=${limit}`, {
-    next: { revalidate: 60 },
-  });
+  try {
+    const response = await fetch(`${env.indexerApiUrl}/api/leaderboard?limit=${limit}`, {
+      next: { revalidate: 60 },
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      console.error("Failed to fetch leaderboard:", response.statusText);
+      return [];
+    }
+
+    const json = await response.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
     return [];
   }
-
-  const json = await response.json();
-  return json.data || [];
 }
 
 interface LeaderboardProps {
