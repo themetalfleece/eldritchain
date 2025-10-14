@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
 import { type Rarity, rarityTiers } from "@eldritchain/common";
+import mongoose from "mongoose";
 
 /** Individual summon event */
 export interface ISummonEvent {
@@ -42,6 +42,7 @@ const summonEventSchema = new mongoose.Schema<ISummonEvent>(
     blockNumber: {
       type: String,
       required: true,
+      index: true,
       get: (v: string) => BigInt(v),
       set: (v: bigint) => v.toString(),
     },
@@ -61,6 +62,7 @@ const summonEventSchema = new mongoose.Schema<ISummonEvent>(
 summonEventSchema.index({ address: 1, timestamp: -1 }); // User history
 summonEventSchema.index({ rarity: 1, timestamp: -1 }); // Rarity-based queries
 summonEventSchema.index({ address: 1, rarity: 1 }); // User's creatures by rarity
+summonEventSchema.index({ blockNumber: 1, address: 1 }, { unique: true }); // Prevent duplicates per block+address
 
 export const SummonEvent = mongoose.model<ISummonEvent>("SummonEvent", summonEventSchema);
 

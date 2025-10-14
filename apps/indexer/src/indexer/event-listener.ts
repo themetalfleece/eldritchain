@@ -52,10 +52,8 @@ async function processEvent(log: Log): Promise<void> {
   console.log(`📦 Processed: ${address} summoned ${rarity} #${creatureId} (level ${level})`);
 }
 
-/** Fetch and process events from a block range */
-async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<void> {
-  console.log(`🔍 Scanning blocks ${fromBlock} → ${toBlock}...`);
-
+/** Fetch and process events from a single block range (max 5 blocks) */
+async function processSingleChunk(fromBlock: bigint, toBlock: bigint): Promise<void> {
   const logs = await publicClient.getLogs({
     address: config.contract.address,
     event: contractAbi[0],
@@ -63,24 +61,48 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
     toBlock,
   });
 
-  console.log(`📝 Found ${logs.length} events`);
+  if (logs.length > 0) {
+    console.log(`📝 Found ${logs.length} events in blocks ${fromBlock}-${toBlock}`);
+  }
 
   // Process all events - if any fail, the whole range will be retried
   for (const log of logs) {
     await processEvent(log); // Throws on error -> triggers retry
   }
+}
 
-  // Update indexer state only after ALL events processed successfully
-  await IndexerState.findOneAndUpdate(
-    {},
-    {
-      lastProcessedBlock: toBlock.toString(),
-      updatedAt: new Date(),
-    },
-    { upsert: true }
-  );
+/** Fetch and process events from a block range, chunked to avoid RPC limits */
+async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<void> {
+  const totalBlocks = toBlock - fromBlock + 1n;
+  console.log(`🔍 Scanning blocks ${fromBlock} → ${toBlock} (${totalBlocks} blocks)...`);
 
-  console.log(`✅ Updated state to block ${toBlock}`);
+  const maxChunkSize = 10n;
+  let currentBlock = fromBlock;
+
+  // Process in chunks of max 10 blocks (~20s)
+  while (currentBlock <= toBlock) {
+    const chunkEnd = currentBlock + maxChunkSize - 1n;
+    const actualEnd = chunkEnd > toBlock ? toBlock : chunkEnd;
+
+    await processSingleChunk(currentBlock, actualEnd);
+
+    // Update state after EACH successful chunk
+    // This saves progress and prevents re-processing if a later chunk fails
+    await IndexerState.findOneAndUpdate(
+      {},
+      {
+        lastProcessedBlock: actualEnd.toString(),
+        updatedAt: new Date(),
+      },
+      { upsert: true }
+    );
+
+    console.log(`💾 Saved progress: block ${actualEnd}`);
+
+    currentBlock = actualEnd + 1n;
+  }
+
+  console.log(`✅ Processed all blocks up to ${toBlock}`);
 }
 
 /** Main indexer loop */
