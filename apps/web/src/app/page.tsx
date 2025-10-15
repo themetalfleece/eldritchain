@@ -39,7 +39,7 @@ async function fetchRecentSummons(): Promise<RecentSummonEvent[]> {
   }
 
   try {
-    const response = await fetch(getIndexerUrl("/api/recent-summons?limit=5"), {
+    const response = await fetch(getIndexerUrl("/api/recent-summons?limit=6"), {
       next: { revalidate: 30 },
     });
 
