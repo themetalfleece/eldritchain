@@ -14,7 +14,7 @@ describe("Eldritchain", function () {
     eldritchain = (await upgrades.deployProxy(EldritchainFactory, [], {
       initializer: "initialize",
       kind: "uups",
-    })) as any;
+    })) as unknown as Eldritchain;
     await eldritchain.waitForDeployment();
   });
 
@@ -50,7 +50,7 @@ describe("Eldritchain", function () {
       const tx = await eldritchain.summon();
       const receipt = await tx.wait();
 
-      const event = receipt?.logs.find((log: any) => log.fragment?.name === "CreatureSummoned");
+      const event = receipt?.logs.find((log) => log.fragment?.name === "CreatureSummoned");
       expect(event).to.not.be.undefined;
     });
 
@@ -59,8 +59,8 @@ describe("Eldritchain", function () {
       const receipt = await tx.wait();
 
       const creatureSummonedEvent = receipt?.logs.find(
-        (log: any) => log.fragment?.name === "CreatureSummoned"
-      ) as any;
+        (log) => log.fragment?.name === "CreatureSummoned"
+      ) as { args: [string, bigint, bigint] } | undefined;
 
       const creatureId = creatureSummonedEvent.args[1];
       const level = await eldritchain.getCreatureLevel(owner.address, creatureId);

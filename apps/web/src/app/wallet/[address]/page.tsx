@@ -1,5 +1,6 @@
 import { Collection } from "@/components/Collection.component";
 import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
+import { CopyLinkButton } from "@/components/CopyLinkButton.component";
 import Link from "next/link";
 import { isAddress } from "viem";
 import { styles } from "./page.styles";
@@ -29,6 +30,11 @@ export default async function WalletPage({ params }: WalletPageProps) {
           <p className={styles.main.hero.address}>
             {isValidAddress ? address : "Invalid wallet address"}
           </p>
+          {isValidAddress && (
+            <div className={styles.main.hero.copyButton}>
+              <CopyLinkButton address={address as `0x${string}`} />
+            </div>
+          )}
         </div>
 
         <div className={styles.main.collectionSection}>
@@ -45,10 +51,6 @@ export default async function WalletPage({ params }: WalletPageProps) {
           </Link>
         </div>
       </main>
-
-      <footer className={styles.footer.container}>
-        <p>Eldritchain - A decentralized creature collection game</p>
-      </footer>
     </div>
   );
 }

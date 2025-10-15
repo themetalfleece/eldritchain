@@ -1,7 +1,7 @@
 "use client";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/config/contract.config";
-import { getCreature } from "@/data/creatures.data";
+import { getCreature, getRarityColor, Rarity } from "@/data/creatures.data";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { GAS_LIMIT } from "./SummonButton.constants";
@@ -14,9 +14,19 @@ interface SummonButtonProps {
 export function SummonButton({ onSummonComplete }: SummonButtonProps) {
   const { address, isConnected } = useAccount();
   const [timeLeft, setTimeLeft] = useState<string>("");
-  const [summonedCreature, setSummonedCreature] = useState<{ id: number; name: string } | null>(
-    null
-  );
+  const [summonedCreature, setSummonedCreature] = useState<{
+    id: number;
+    name: string;
+    rarity: Rarity;
+  } | null>(null);
+
+  // Reset state when wallet disconnects
+  useEffect(() => {
+    if (!isConnected) {
+      setTimeLeft("");
+      setSummonedCreature(null);
+    }
+  }, [isConnected]);
 
   const { data: canSummon } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -102,7 +112,7 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
         const creature = getCreature(creatureId);
 
         if (creature) {
-          setSummonedCreature({ id: creatureId, name: creature.name });
+          setSummonedCreature({ id: creatureId, name: creature.name, rarity: creature.rarity });
         }
 
         if (onSummonComplete) {
@@ -113,6 +123,22 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
       }
     }
   }, [isSuccess, receipt, onSummonComplete]);
+
+  const getButtonText = () => {
+    if (isPending) {
+      return "Confirm in Wallet...";
+    }
+    if (isConfirming) {
+      return "Summoning...";
+    }
+    if (isSuccess) {
+      return "Summoned!";
+    }
+    if (canSummon) {
+      return "Summon Creature";
+    }
+    return "Summon on Cooldown";
+  };
 
   const handleSummon = () => {
     setSummonedCreature(null); // Reset previous summon
@@ -144,15 +170,7 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
         disabled={!canSummon || isPending || isConfirming}
         className={buttonClassName}
       >
-        {isPending
-          ? "Confirm in Wallet..."
-          : isConfirming
-            ? "Summoning..."
-            : isSuccess
-              ? "Summoned!"
-              : canSummon
-                ? "Summon Creature"
-                : "Summon on Cooldown"}
+        {getButtonText()}
       </button>
 
       {timeLeft && (
@@ -166,6 +184,9 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
       {isSuccess && summonedCreature && (
         <div className={styles.successMessage}>
           Successfully summoned: <strong>{summonedCreature.name}</strong> (#{summonedCreature.id})
+          <div className={`mt-2 text-sm font-medium ${getRarityColor(summonedCreature.rarity)}`}>
+            {summonedCreature.rarity.toUpperCase()}
+          </div>
         </div>
       )}
     </div>

@@ -6,16 +6,14 @@ import { Eldritchain } from "../typechain-types";
 describe("Distribution Test", function () {
   let eldritchain: Eldritchain;
   let owner: SignerWithAddress;
-  let user1: SignerWithAddress;
-  let users: SignerWithAddress[];
 
   beforeEach(async function () {
-    [owner, user1, ...users] = await ethers.getSigners();
+    [owner] = await ethers.getSigners();
     const EldritchainFactory = await ethers.getContractFactory("Eldritchain", owner);
     eldritchain = (await upgrades.deployProxy(EldritchainFactory, [], {
       initializer: "initialize",
       kind: "uups",
-    })) as any;
+    })) as unknown as Eldritchain;
     await eldritchain.waitForDeployment();
   });
 
@@ -61,8 +59,8 @@ describe("Distribution Test", function () {
 
         // Extract creature ID from event
         const event = receipt?.logs.find(
-          (log: any) => log.fragment?.name === "CreatureSummoned"
-        ) as any;
+          (log) => "fragment" in log && log.fragment?.name === "CreatureSummoned"
+        ) as { args: [string, bigint, bigint] } | undefined;
 
         if (event) {
           const creatureId = Number(event.args[1]);

@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/themetalfleece/eldritchain.git"
+  },
+  "homepage": "https://github.com/themetalfleece/eldritchain#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

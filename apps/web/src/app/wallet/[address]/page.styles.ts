@@ -1,5 +1,5 @@
 export const styles = {
-  container: "min-h-screen bg-gradient-to-b from-gray-900 to-black",
+  container: "",
 
   header: {
     container: "container mx-auto px-4 py-6",
@@ -15,6 +15,7 @@ export const styles = {
       container: "text-center mb-12",
       title: "text-4xl font-bold text-white mb-4",
       address: "font-mono text-sm text-purple-300 break-all max-w-2xl mx-auto",
+      copyButton: "mt-4",
     },
 
     collectionSection: "mb-12",
@@ -27,9 +28,5 @@ export const styles = {
     error: {
       container: "p-12 text-center text-red-400 text-lg",
     },
-  },
-
-  footer: {
-    container: "container mx-auto px-4 py-8 text-center text-gray-500 text-sm mt-auto",
   },
 };

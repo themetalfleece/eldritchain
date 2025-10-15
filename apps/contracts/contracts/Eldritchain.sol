@@ -263,14 +263,10 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     // Calculate weighted sum (only one condition will be 1, others 0)
     creatureId =
-      creatureIds[0] *
-      conditions[0] +
-      creatureIds[1] *
-      conditions[1] +
-      creatureIds[2] *
-      conditions[2] +
-      creatureIds[3] *
-      conditions[3];
+      creatureIds[0] * conditions[0] +
+      creatureIds[1] * conditions[1] +
+      creatureIds[2] * conditions[2] +
+      creatureIds[3] * conditions[3];
 
     // Increment creature level
     userCreatures[msg.sender][creatureId]++;

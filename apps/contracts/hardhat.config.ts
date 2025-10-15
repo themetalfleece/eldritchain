@@ -13,7 +13,6 @@ function getRpcUrl(networkName: NetworkName): string {
   return network.chain.rpcUrls.default.http[0];
 }
 
-const networkName = (process.env.NETWORK || "polygonAmoy") as NetworkName;
 const privateKey = process.env.PRIVATE_KEY || "";
 const accounts = privateKey ? [privateKey] : [];
 

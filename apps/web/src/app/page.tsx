@@ -1,6 +1,7 @@
 import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
 import { InteractiveSection } from "@/components/InteractiveSection.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
+import Link from "next/link";
 import { Suspense } from "react";
 import { styles } from "./page.styles";
 
@@ -9,7 +10,9 @@ export default function Home() {
     <div className={styles.container}>
       <header className={styles.header.container}>
         <div className={styles.header.inner}>
-          <h1 className={styles.header.title}>Eldritchain</h1>
+          <Link href="/">
+            <h1 className={styles.header.title}>Eldritchain</h1>
+          </Link>
           <ConnectButtonClient />
         </div>
       </header>
@@ -21,6 +24,16 @@ export default function Home() {
             Summon a random creature once per day. Collect common animals, rare predators, epic
             Lovecraftian monsters, and legendary cosmic deities.
           </p>
+          <div className={styles.main.hero.note}>
+            <p className={styles.main.hero.noteText}>
+              💎 <strong>Decentralized & On-Chain:</strong> All creature data is stored on the
+              blockchain.
+              <br />
+              Gas fees paid in POL (Polygon&apos;s native token).
+              <br />
+              Your collection is truly yours!
+            </p>
+          </div>
         </div>
 
         <InteractiveSection
@@ -34,10 +47,6 @@ export default function Home() {
           </Suspense>
         </div>
       </main>
-
-      <footer className={styles.footer.container}>
-        <p>Eldritchain - A decentralized creature collection game</p>
-      </footer>
     </div>
   );
 }

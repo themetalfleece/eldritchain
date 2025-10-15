@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Collection } from "./Collection.component";
-import { ShareCollectionButton } from "./ShareCollectionButton.component";
 import { SummonButton } from "./SummonButton.component";
+import { ViewCollectionButton } from "./ViewCollectionButton.component";
 
 interface InteractiveSectionProps {
   summonSectionStyles: string;
@@ -24,7 +24,7 @@ export function InteractiveSection({
     <>
       <div className={summonSectionStyles}>
         <SummonButton onSummonComplete={handleSummonComplete} />
-        <ShareCollectionButton />
+        <ViewCollectionButton />
       </div>
 
       <div className={collectionSectionStyles}>
