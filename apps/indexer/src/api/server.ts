@@ -236,36 +236,47 @@ app.get<{
   }
 });
 
-/** Get leaderboard stats */
+/** Get global stats */
 app.get("/api/stats", async (req, reply) => {
   try {
     const totalSummons = await SummonEvent.countDocuments();
     const totalUsers = (await SummonEvent.distinct("address")).length;
 
-    const topDeityCollector = await SummonEvent.aggregate([
-      { $match: { rarity: "deity" } },
+    // Get stats by rarity using the same approach as leaderboard
+    const rarityStats = await SummonEvent.aggregate([
       {
         $group: {
-          _id: "$address",
-          deityCount: { $sum: 1 },
+          _id: null,
+          common: {
+            $sum: { $cond: [{ $eq: ["$rarity", "common"] }, 1, 0] },
+          },
+          rare: {
+            $sum: { $cond: [{ $eq: ["$rarity", "rare"] }, 1, 0] },
+          },
+          epic: {
+            $sum: { $cond: [{ $eq: ["$rarity", "epic"] }, 1, 0] },
+          },
+          deity: {
+            $sum: { $cond: [{ $eq: ["$rarity", "deity"] }, 1, 0] },
+          },
         },
       },
-      { $sort: { deityCount: -1 } },
-      { $limit: 1 },
     ]);
+
+    const rarityCounts = rarityStats[0] || { common: 0, rare: 0, epic: 0, deity: 0 };
+
+    const stats = {
+      totalSummons,
+      totalUsers,
+      common: rarityCounts.common,
+      rare: rarityCounts.rare,
+      epic: rarityCounts.epic,
+      deity: rarityCounts.deity,
+    };
 
     return {
       success: true,
-      data: {
-        totalUsers,
-        totalSummons,
-        topDeityCollector: topDeityCollector[0]
-          ? {
-              address: topDeityCollector[0]._id,
-              deityCount: topDeityCollector[0].deityCount,
-            }
-          : null,
-      },
+      data: stats,
     };
   } catch (error) {
     req.log.error(error, "Error fetching stats");
@@ -273,6 +284,33 @@ app.get("/api/stats", async (req, reply) => {
     return {
       success: false,
       error: "Failed to fetch stats",
+    };
+  }
+});
+
+/** Get recent summons */
+app.get<{
+  Querystring: { limit?: string };
+}>("/api/recent-summons", async (req, reply) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || "5") || 5, 50);
+
+    const recentSummons = await SummonEvent.find()
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .select("-_id -__v")
+      .lean();
+
+    return {
+      success: true,
+      data: recentSummons,
+    };
+  } catch (error) {
+    req.log.error(error, "Error fetching recent summons");
+    reply.status(500);
+    return {
+      success: false,
+      error: "Failed to fetch recent summons",
     };
   }
 });

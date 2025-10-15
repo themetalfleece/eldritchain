@@ -18,6 +18,8 @@ export const styles = {
       copyButton: "mt-4",
     },
 
+    statsSection: "max-w-7xl mx-auto mb-12",
+
     collectionSection: "mb-12",
 
     backLink: {

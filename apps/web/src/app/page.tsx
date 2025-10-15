@@ -1,21 +1,70 @@
-import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
+import { Header } from "@/components/Header.component";
 import { InteractiveSection } from "@/components/InteractiveSection.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
+import { RecentSummons } from "@/components/RecentSummons.component";
+import { Stats } from "@/components/Stats.component";
+import { getIndexerUrl } from "@/lib/api.utils";
+import { env } from "@/lib/env.config";
+import { type GlobalStats, type RecentSummonEvent } from "@eldritchain/common";
 import Link from "next/link";
 import { Suspense } from "react";
 import { styles } from "./page.styles";
 
-export default function Home() {
+async function fetchGlobalStats(): Promise<GlobalStats | null> {
+  if (!env.indexerApiUrl) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(getIndexerUrl("/api/stats"), {
+      next: { revalidate: 60 },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch global stats:", response);
+      return null;
+    }
+
+    const json = await response.json();
+    return json.data || null;
+  } catch (error) {
+    console.error("Error fetching global stats:", error);
+    return null;
+  }
+}
+
+async function fetchRecentSummons(): Promise<RecentSummonEvent[]> {
+  if (!env.indexerApiUrl) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(getIndexerUrl("/api/recent-summons?limit=5"), {
+      next: { revalidate: 30 },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch recent summons:", response);
+      return [];
+    }
+
+    const json = await response.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Error fetching recent summons:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const [globalStats, recentSummons] = await Promise.all([
+    fetchGlobalStats(),
+    fetchRecentSummons(),
+  ]);
+
   return (
     <div className={styles.container}>
-      <header className={styles.header.container}>
-        <div className={styles.header.inner}>
-          <Link href="/">
-            <h1 className={styles.header.title}>Eldritchain</h1>
-          </Link>
-          <ConnectButtonClient />
-        </div>
-      </header>
+      <Header />
 
       <main className={styles.main.container}>
         <div className={styles.main.hero.container}>
@@ -36,15 +85,32 @@ export default function Home() {
           </div>
         </div>
 
-        <InteractiveSection
-          summonSectionStyles={styles.main.summonSection}
-          collectionSectionStyles={styles.main.collectionSection}
-        />
+        {globalStats && (
+          <div className={styles.main.statsSection}>
+            <Stats stats={globalStats} />
+          </div>
+        )}
+
+        <InteractiveSection summonSectionStyles={styles.main.summonSection} />
+
+        {recentSummons.length > 0 && (
+          <div className={styles.main.recentSummonsSection}>
+            <RecentSummons summons={recentSummons} />
+          </div>
+        )}
 
         <div className={styles.main.leaderboardSection}>
           <Suspense fallback={<LeaderboardLoading />}>
             <Leaderboard limit={10} />
           </Suspense>
+          <div className="text-center mt-6">
+            <Link
+              href="/leaderboard"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-lg hover:from-yellow-400 hover:to-orange-400 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Show More →
+            </Link>
+          </div>
         </div>
       </main>
     </div>

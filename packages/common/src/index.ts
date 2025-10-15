@@ -8,7 +8,14 @@ export {
 } from "./constants/creature-ranges";
 
 // Types
-export type { LeaderboardEntry, Rarity, SummonEvent, UserCollection } from "./types";
+export type {
+  GlobalStats,
+  LeaderboardEntry,
+  Rarity,
+  RecentSummonEvent,
+  SummonEvent,
+  UserCollection,
+} from "./types";
 
 // Utils
 export { assertEnv, assertEnvAddress, assertEnvBigInt, assertEnvInt } from "./utils/env";

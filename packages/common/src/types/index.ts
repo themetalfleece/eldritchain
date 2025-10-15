@@ -26,3 +26,24 @@ export interface LeaderboardEntry {
   lastSummonTime: Date;
   rank?: number;
 }
+
+/** Global stats */
+export interface GlobalStats {
+  totalSummons: number;
+  totalUsers: number;
+  common: number;
+  rare: number;
+  epic: number;
+  deity: number;
+}
+
+/** Recent summon event */
+export interface RecentSummonEvent {
+  address: string;
+  creatureId: number;
+  rarity: import("../constants/creature-ranges").Rarity;
+  level: number;
+  timestamp: Date;
+  blockNumber: bigint;
+  transactionHash: string;
+}

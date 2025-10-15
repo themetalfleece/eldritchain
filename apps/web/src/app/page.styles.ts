@@ -17,8 +17,10 @@ export const styles = {
       note: "mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg border border-purple-500/20 max-w-3xl mx-auto",
       noteText: "text-sm text-gray-300",
     },
+    statsSection: "max-w-7xl mx-auto mb-16",
     summonSection: "flex flex-col items-center mb-16",
     collectionSection: "max-w-7xl mx-auto mb-16",
+    recentSummonsSection: "max-w-7xl mx-auto mb-16",
     leaderboardSection: "max-w-7xl mx-auto mb-16",
   },
 };

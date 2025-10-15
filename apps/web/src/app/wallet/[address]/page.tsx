@@ -1,6 +1,10 @@
 import { Collection } from "@/components/Collection.component";
-import { ConnectButtonClient } from "@/components/ConnectButtonClient.component";
 import { CopyLinkButton } from "@/components/CopyLinkButton.component";
+import { Header } from "@/components/Header.component";
+import { Stats } from "@/components/Stats.component";
+import { getIndexerUrl } from "@/lib/api.utils";
+import { env } from "@/lib/env.config";
+import { type GlobalStats } from "@eldritchain/common";
 import Link from "next/link";
 import { isAddress } from "viem";
 import { styles } from "./page.styles";
@@ -9,20 +13,50 @@ interface WalletPageProps {
   params: Promise<{ address: string }>;
 }
 
+async function fetchUserStats(address: string): Promise<GlobalStats | null> {
+  if (!env.indexerApiUrl) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(getIndexerUrl(`/api/user/${address}`), {
+      next: { revalidate: 60 },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch user stats:", response);
+      return null;
+    }
+
+    const json = await response.json();
+    if (!json.success || !json.data) {
+      return null;
+    }
+
+    // Convert user stats to GlobalStats format
+    return {
+      totalSummons: json.data.totalSummons,
+      totalUsers: 1, // Single user
+      common: json.data.commonCount,
+      rare: json.data.rareCount,
+      epic: json.data.epicCount,
+      deity: json.data.deityCount,
+    };
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    return null;
+  }
+}
+
 export default async function WalletPage({ params }: WalletPageProps) {
   const { address } = await params;
   const isValidAddress = address && isAddress(address);
 
+  const userStats = isValidAddress ? await fetchUserStats(address) : null;
+
   return (
     <div className={styles.container}>
-      <header className={styles.header.container}>
-        <div className={styles.header.inner}>
-          <Link href="/">
-            <h1 className={styles.header.title}>Eldritchain</h1>
-          </Link>
-          <ConnectButtonClient />
-        </div>
-      </header>
+      <Header />
 
       <main className={styles.main.container}>
         <div className={styles.main.hero.container}>
@@ -36,6 +70,12 @@ export default async function WalletPage({ params }: WalletPageProps) {
             </div>
           )}
         </div>
+
+        {userStats && (
+          <div className={styles.main.statsSection}>
+            <Stats stats={userStats} title="Collection Statistics" showTotalUsers={false} />
+          </div>
+        )}
 
         <div className={styles.main.collectionSection}>
           {isValidAddress ? (
