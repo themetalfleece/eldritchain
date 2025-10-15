@@ -27,8 +27,11 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: networkName,
+  defaultNetwork: "hardhat", // Tests always use local Hardhat network
   networks: {
+    hardhat: {
+      // Local development network with EVM testing features
+    },
     sepolia: {
       url: getRpcUrl("sepolia"),
       accounts,

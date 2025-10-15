@@ -177,17 +177,22 @@ Ensure your deployment wallet has Sepolia ETH:
 ### Step 2: Deploy the Contract
 
 ```bash
-# From root
-yarn contracts deploy
+# From root (specify network with --network flag)
+yarn contracts deploy --network polygonAmoy
 
 # Or from apps/contracts
-yarn deploy
+yarn deploy --network polygonAmoy
+
+# For mainnet
+yarn deploy --network polygon
 ```
+
+**⚠️ Important:** You MUST specify `--network <name>` to deploy to a real blockchain. Without it, Hardhat uses a local in-memory network (for testing only).
 
 This will:
 
 1. Compile the contract
-2. Deploy to your configured network (from `NETWORK` in `.env`, defaults to `polygonAmoy`)
+2. Deploy to the specified network
 3. Output the deployed contract address
 
 **Save the contract address!** You'll need it for the frontend.
