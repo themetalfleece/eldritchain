@@ -10,7 +10,7 @@ describe("Eldritchain", function () {
 
   beforeEach(async function () {
     [owner, user1] = await ethers.getSigners();
-    const EldritchainFactory = await ethers.getContractFactory("Eldritchain");
+    const EldritchainFactory = await ethers.getContractFactory("Eldritchain", owner);
     eldritchain = (await upgrades.deployProxy(EldritchainFactory, [], {
       initializer: "initialize",
       kind: "uups",

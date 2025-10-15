@@ -205,27 +205,72 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 rarityRoll = randomValue % 10000;
     uint16 creatureId;
 
-    if (rarityRoll < 50) {
-      // 0.5% - Deity
+    // Gas normalization: Execute all paths to ensure consistent gas usage
+    // This prevents attackers from predicting rarity based on gas estimation
+
+    // Calculate all possible creature IDs (but only use the correct one)
+    uint16 deityId = 0;
+    uint16 epicId = 0;
+    uint16 rareId = 0;
+    uint16 commonId = 0;
+
+    // Deity path (0.5%)
+    {
       uint16 range = deityCount();
-      uint16 index = uint16((randomValue >> 8) % range);
-      creatureId = DEITY_BASE + index;
-    } else if (rarityRoll < 500) {
-      // 4.5% - Epic
-      uint16 range = epicCount();
-      uint16 index = uint16((randomValue >> 16) % range);
-      creatureId = EPIC_BASE + index;
-    } else if (rarityRoll < 3000) {
-      // 25% - Rare
-      uint16 range = rareCount();
-      uint16 index = uint16((randomValue >> 24) % range);
-      creatureId = RARE_BASE + index;
-    } else {
-      // 70% - Common
-      uint16 range = commonCount();
-      uint16 index = uint16((randomValue >> 32) % range);
-      creatureId = COMMON_BASE + index;
+      require(range > 0, "No deity creatures available");
+      uint256 deityRandom = uint256(keccak256(abi.encodePacked(randomValue, "deity")));
+      uint16 index = uint16(deityRandom % range);
+      deityId = DEITY_BASE + index;
     }
+
+    // Epic path (4.5%)
+    {
+      uint16 range = epicCount();
+      require(range > 0, "No epic creatures available");
+      uint256 epicRandom = uint256(keccak256(abi.encodePacked(randomValue, "epic")));
+      uint16 index = uint16(epicRandom % range);
+      epicId = EPIC_BASE + index;
+    }
+
+    // Rare path (25%)
+    {
+      uint16 range = rareCount();
+      require(range > 0, "No rare creatures available");
+      uint256 rareRandom = uint256(keccak256(abi.encodePacked(randomValue, "rare")));
+      uint16 index = uint16(rareRandom % range);
+      rareId = RARE_BASE + index;
+    }
+
+    // Common path (70%)
+    {
+      uint16 range = commonCount();
+      require(range > 0, "No common creatures available");
+      uint256 commonRandom = uint256(keccak256(abi.encodePacked(randomValue, "common")));
+      uint16 index = uint16(commonRandom % range);
+      commonId = COMMON_BASE + index;
+    }
+
+    // Select the correct creature ID based on rarity roll
+    // Use a lookup approach to ensure completely uniform gas usage
+    // All operations execute regardless of outcome
+    uint16[4] memory creatureIds = [deityId, epicId, rareId, commonId];
+    uint16[4] memory conditions = [
+      uint16(rarityRoll < 50 ? 1 : 0),
+      uint16(rarityRoll >= 50 && rarityRoll < 500 ? 1 : 0),
+      uint16(rarityRoll >= 500 && rarityRoll < 3000 ? 1 : 0),
+      uint16(rarityRoll >= 3000 ? 1 : 0)
+    ];
+
+    // Calculate weighted sum (only one condition will be 1, others 0)
+    creatureId =
+      creatureIds[0] *
+      conditions[0] +
+      creatureIds[1] *
+      conditions[1] +
+      creatureIds[2] *
+      conditions[2] +
+      creatureIds[3] *
+      conditions[3];
 
     // Increment creature level
     userCreatures[msg.sender][creatureId]++;
