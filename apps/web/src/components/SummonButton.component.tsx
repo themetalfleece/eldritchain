@@ -4,6 +4,7 @@ import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/config/contract.config";
 import { getCreature } from "@/data/creatures.data";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { GAS_LIMIT } from "./SummonButton.constants";
 import { styles } from "./SummonButton.styles";
 
 interface SummonButtonProps {
@@ -115,10 +116,12 @@ export function SummonButton({ onSummonComplete }: SummonButtonProps) {
 
   const handleSummon = () => {
     setSummonedCreature(null); // Reset previous summon
+
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: "summon",
+      gas: GAS_LIMIT,
     });
   };
 
