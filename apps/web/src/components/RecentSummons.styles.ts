@@ -16,7 +16,7 @@ export const styles = {
   level: "text-gray-400 text-xs",
   summonerInfo: "border-t border-gray-700/50 pt-3",
   summonerAddress: "text-gray-300 text-xs font-mono",
-  timestamp: "text-gray-500 text-xs mt-1",
+  timestamp: "text-gray-400 text-xs mt-1 font-medium",
   empty: "text-center py-8",
   emptyText: "text-gray-400",
 };
