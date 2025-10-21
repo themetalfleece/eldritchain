@@ -1,6 +1,6 @@
 import cors from "@fastify/cors";
 import fastify from "fastify";
-import { config } from "../config";
+import { apiConfig } from "../config.api";
 import { SummonEvent } from "../db/models";
 
 const app = fastify({
@@ -317,14 +317,14 @@ app.get<{
 
 export async function startApiServer(): Promise<void> {
   try {
-    await app.listen({ port: config.api.port, host: "0.0.0.0" });
+    await app.listen({ port: apiConfig.port, host: "0.0.0.0" });
 
-    console.log(`🌐 API server running on http://localhost:${config.api.port}`);
-    console.log(`   - Health: http://localhost:${config.api.port}/health`);
-    console.log(`   - Leaderboard: http://localhost:${config.api.port}/api/leaderboard`);
-    console.log(`   - User stats: http://localhost:${config.api.port}/api/user/:address`);
+    console.log(`🌐 API server running on http://localhost:${apiConfig.port}`);
+    console.log(`   - Health: http://localhost:${apiConfig.port}/health`);
+    console.log(`   - Leaderboard: http://localhost:${apiConfig.port}/api/leaderboard`);
+    console.log(`   - User stats: http://localhost:${apiConfig.port}/api/user/:address`);
     console.log(
-      `   - User history: http://localhost:${config.api.port}/api/user/:address/history\n`
+      `   - User history: http://localhost:${apiConfig.port}/api/user/:address/history\n`
     );
   } catch (error) {
     console.error("Failed to start API server:", error);

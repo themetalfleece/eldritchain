@@ -1,7 +1,7 @@
 import { getCreatureRarity } from "@eldritchain/common";
 import mongoose from "mongoose";
 import { createPublicClient, http, parseAbiItem, type Log } from "viem";
-import { config } from "../config";
+import { indexerConfig } from "../config.indexer";
 import { IndexerState, SummonEvent } from "../db/models";
 
 const contractAbi = [
@@ -11,7 +11,7 @@ const contractAbi = [
 ];
 
 const publicClient = createPublicClient({
-  transport: http(config.contract.rpcUrl),
+  transport: http(indexerConfig.contract.rpcUrl),
 });
 
 /** Process a single CreatureSummoned event within a transaction */
@@ -90,7 +90,7 @@ async function processSingleChunkInTransaction(
 ): Promise<void> {
   try {
     const logs = await publicClient.getLogs({
-      address: config.contract.address,
+      address: indexerConfig.contract.address,
       event: contractAbi[0],
       fromBlock,
       toBlock,
@@ -109,7 +109,7 @@ async function processSingleChunkInTransaction(
       error: error instanceof Error ? error.message : String(error),
       fromBlock: fromBlock.toString(),
       toBlock: toBlock.toString(),
-      contractAddress: config.contract.address,
+      contractAddress: indexerConfig.contract.address,
     });
     throw error; // Re-throw to trigger transaction rollback
   }
@@ -149,15 +149,17 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
 /** Main indexer loop */
 export async function startEventListener(): Promise<void> {
   console.log("🚀 Starting event listener...");
-  console.log(`📍 Contract: ${config.contract.address}`);
-  console.log(`🌐 Network: ${config.contract.networkName} (Chain ID: ${config.contract.chainId})`);
-  console.log(`🔗 RPC: ${config.contract.rpcUrl}`);
+  console.log(`📍 Contract: ${indexerConfig.contract.address}`);
+  console.log(
+    `🌐 Network: ${indexerConfig.contract.networkName} (Chain ID: ${indexerConfig.contract.chainId})`
+  );
+  console.log(`🔗 RPC: ${indexerConfig.contract.rpcUrl}`);
 
   // Get initial last processed block for logging
   const initialState = await IndexerState.findOne();
   const initialLastBlock = initialState?.lastProcessedBlock
     ? BigInt(initialState.lastProcessedBlock.toString())
-    : config.indexer.startBlock;
+    : indexerConfig.startBlock;
 
   console.log(`⏮️  Starting from block ${initialLastBlock}\n`);
 
@@ -168,15 +170,15 @@ export async function startEventListener(): Promise<void> {
       const state = await IndexerState.findOne();
       const lastBlock = state?.lastProcessedBlock
         ? BigInt(state.lastProcessedBlock.toString())
-        : config.indexer.startBlock;
+        : indexerConfig.startBlock;
 
       const latestBlock = await publicClient.getBlockNumber();
 
       if (latestBlock > lastBlock) {
-        // Process up to 5 blocks at a time
+        // Process up to maxBlocksPerPoll blocks at a time
         const fromBlock = lastBlock + 1n;
         const blocksToProcess = latestBlock - lastBlock;
-        const maxBlocksPerPoll = 5n;
+        const maxBlocksPerPoll = BigInt(indexerConfig.maxBlocksPerPoll);
         const blocksThisPoll =
           blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
         const toBlock = lastBlock + blocksThisPoll;
@@ -189,7 +191,7 @@ export async function startEventListener(): Promise<void> {
         stack: error instanceof Error ? error.stack : undefined,
       });
     }
-  }, config.indexer.pollInterval);
+  }, indexerConfig.pollInterval);
 
   console.log("✅ Event listener started\n");
 }
