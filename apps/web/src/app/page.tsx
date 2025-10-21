@@ -17,7 +17,7 @@ async function fetchGlobalStats(): Promise<GlobalStats | null> {
 
   try {
     const response = await fetch(getIndexerUrl("/api/stats"), {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -40,7 +40,7 @@ async function fetchRecentSummons(): Promise<RecentSummonEvent[]> {
 
   try {
     const response = await fetch(getIndexerUrl("/api/recent-summons?limit=6"), {
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
 
     if (!response.ok) {

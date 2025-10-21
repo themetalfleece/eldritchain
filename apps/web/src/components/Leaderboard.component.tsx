@@ -11,7 +11,7 @@ async function fetchLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
 
   try {
     const response = await fetch(getIndexerUrl(`/api/leaderboard?limit=${limit}`), {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!response.ok) {

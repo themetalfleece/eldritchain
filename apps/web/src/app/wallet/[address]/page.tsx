@@ -20,7 +20,7 @@ async function fetchUserStats(address: string): Promise<GlobalStats | null> {
 
   try {
     const response = await fetch(getIndexerUrl(`/api/user/${address}`), {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!response.ok) {
