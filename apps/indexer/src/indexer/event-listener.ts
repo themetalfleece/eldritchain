@@ -1,4 +1,5 @@
 import { getCreatureRarity } from "@eldritchain/common";
+import mongoose from "mongoose";
 import { createPublicClient, http, parseAbiItem, type Log } from "viem";
 import { config } from "../config";
 import { IndexerState, SummonEvent } from "../db/models";
@@ -13,15 +14,27 @@ const publicClient = createPublicClient({
   transport: http(config.contract.rpcUrl),
 });
 
-/** Process a single CreatureSummoned event */
-async function processEvent(log: Log): Promise<void> {
+/** Process a single CreatureSummoned event within a transaction */
+async function processEventInTransaction(log: Log, session: mongoose.ClientSession): Promise<void> {
   const { args, blockNumber, transactionHash } = log as Log & {
     args: { summoner: string; creatureId: bigint; level: bigint; timestamp: bigint };
     blockNumber: bigint;
     transactionHash: string;
   };
+
   if (!args?.summoner || args?.creatureId === undefined || !transactionHash) {
-    console.warn("⚠️ Invalid event args, skipping:", log);
+    console.warn("⚠️ Invalid event args, skipping:", {
+      transactionHash,
+      blockNumber,
+      args: args
+        ? {
+            summoner: args.summoner,
+            creatureId: args.creatureId,
+            level: args.level,
+            timestamp: args.timestamp,
+          }
+        : null,
+    });
     return; // Skip malformed events (shouldn't happen with valid contracts)
   }
 
@@ -32,50 +45,78 @@ async function processEvent(log: Log): Promise<void> {
   const rarity = getCreatureRarity(creatureId);
 
   // Check if already processed (idempotency)
-  const exists = await SummonEvent.findOne({ transactionHash });
+  const exists = await SummonEvent.findOne({ transactionHash }).session(session);
   if (exists) {
     console.log(`⏭️  Skipping duplicate: ${transactionHash}`);
     return;
   }
 
-  // Insert summon event
-  await SummonEvent.create({
-    address,
-    creatureId,
-    rarity,
-    level,
-    timestamp,
-    blockNumber: blockNumber.toString(),
-    transactionHash,
-  });
-
-  console.log(`📦 Processed: ${address} summoned ${rarity} #${creatureId} (level ${level})`);
+  try {
+    // Insert summon event within transaction
+    await SummonEvent.create(
+      [
+        {
+          address,
+          creatureId,
+          rarity,
+          level,
+          timestamp,
+          blockNumber: blockNumber.toString(),
+          transactionHash,
+        },
+      ],
+      { session }
+    );
+  } catch (error) {
+    console.error(`❌ Database insert failed for ${transactionHash}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      address,
+      creatureId,
+      rarity,
+      level,
+      timestamp: timestamp.toISOString(),
+      blockNumber: blockNumber.toString(),
+      transactionHash,
+    });
+    throw error; // Re-throw to trigger transaction rollback
+  }
 }
 
-/** Fetch and process events from a single block range (max 5 blocks) */
-async function processSingleChunk(fromBlock: bigint, toBlock: bigint): Promise<void> {
-  const logs = await publicClient.getLogs({
-    address: config.contract.address,
-    event: contractAbi[0],
-    fromBlock,
-    toBlock,
-  });
+/** Fetch and process events from a single block range (max 10 blocks) within a transaction */
+async function processSingleChunkInTransaction(
+  fromBlock: bigint,
+  toBlock: bigint,
+  session: mongoose.ClientSession
+): Promise<void> {
+  try {
+    const logs = await publicClient.getLogs({
+      address: config.contract.address,
+      event: contractAbi[0],
+      fromBlock,
+      toBlock,
+    });
 
-  if (logs.length > 0) {
-    console.log(`📝 Found ${logs.length} events in blocks ${fromBlock}-${toBlock}`);
-  }
+    if (logs.length === 0) {
+      return; // No events to process
+    }
 
-  // Process all events - if any fail, the whole range will be retried
-  for (const log of logs) {
-    await processEvent(log); // Throws on error -> triggers retry
+    // Process all events within the existing transaction
+    for (const log of logs) {
+      await processEventInTransaction(log, session);
+    }
+  } catch (error) {
+    console.error(`❌ Failed to process chunk ${fromBlock}-${toBlock}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      fromBlock: fromBlock.toString(),
+      toBlock: toBlock.toString(),
+      contractAddress: config.contract.address,
+    });
+    throw error; // Re-throw to trigger transaction rollback
   }
 }
 
 /** Fetch and process events from a block range, chunked to avoid RPC limits */
 async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<void> {
-  const totalBlocks = toBlock - fromBlock + 1n;
-  console.log(`🔍 Scanning blocks ${fromBlock} → ${toBlock} (${totalBlocks} blocks)...`);
-
   const maxChunkSize = 10n;
   let currentBlock = fromBlock;
 
@@ -84,25 +125,38 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
     const chunkEnd = currentBlock + maxChunkSize - 1n;
     const actualEnd = chunkEnd > toBlock ? toBlock : chunkEnd;
 
-    await processSingleChunk(currentBlock, actualEnd);
+    try {
+      // Use transaction for atomic chunk processing + state update
+      const session = await mongoose.startSession();
 
-    // Update state after EACH successful chunk
-    // This saves progress and prevents re-processing if a later chunk fails
-    await IndexerState.findOneAndUpdate(
-      {},
-      {
-        lastProcessedBlock: actualEnd.toString(),
-        updatedAt: new Date(),
-      },
-      { upsert: true }
-    );
+      try {
+        await session.withTransaction(async () => {
+          // Process events in this chunk
+          await processSingleChunkInTransaction(currentBlock, actualEnd, session);
 
-    console.log(`💾 Saved progress: block ${actualEnd}`);
+          // Update state after successful chunk processing
+          await IndexerState.findOneAndUpdate(
+            {},
+            {
+              lastProcessedBlock: actualEnd.toString(),
+              updatedAt: new Date(),
+            },
+            { upsert: true, session }
+          );
+        });
+      } finally {
+        await session.endSession();
+      }
+    } catch (error) {
+      console.error(
+        `❌ Chunk failed (blocks ${currentBlock}-${actualEnd}):`,
+        error instanceof Error ? error.message : String(error)
+      );
+      throw error; // Re-throw to trigger retry of entire range
+    }
 
     currentBlock = actualEnd + 1n;
   }
-
-  console.log(`✅ Processed all blocks up to ${toBlock}`);
 }
 
 /** Main indexer loop */
@@ -120,14 +174,6 @@ export async function startEventListener(): Promise<void> {
 
   console.log(`⏮️  Starting from block ${lastBlock}\n`);
 
-  // Initial catch-up scan
-  const currentBlock = await publicClient.getBlockNumber();
-  if (lastBlock < currentBlock) {
-    console.log("⚡ Catching up with historical events...");
-    await processBlockRange(lastBlock, currentBlock);
-    lastBlock = currentBlock;
-  }
-
   // Poll for new blocks
   setInterval(async () => {
     try {
@@ -138,7 +184,11 @@ export async function startEventListener(): Promise<void> {
         lastBlock = latestBlock; // Only update in-memory state after successful processing
       }
     } catch (error) {
-      console.error("❌ Error in event listener (will retry next interval):", error);
+      console.error("❌ Error in event listener (will retry next interval):", {
+        error: error instanceof Error ? error.message : String(error),
+        lastBlock: lastBlock.toString(),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       // lastBlock is NOT updated -> same range will be retried next interval
       // Idempotency checks in processEvent prevent duplicate processing
     }
