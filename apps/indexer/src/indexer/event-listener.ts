@@ -82,7 +82,7 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
   }
 }
 
-/** Fetch and process events from a single block range (max 10 blocks) within a transaction */
+/** Fetch and process events from a single block range within a transaction */
 async function processSingleChunkInTransaction(
   fromBlock: bigint,
   toBlock: bigint,
@@ -100,7 +100,7 @@ async function processSingleChunkInTransaction(
       return; // No events to process
     }
 
-    // Process all events within the existing transaction
+    // Process all events within the transaction
     for (const log of logs) {
       await processEventInTransaction(log, session);
     }
@@ -115,47 +115,34 @@ async function processSingleChunkInTransaction(
   }
 }
 
-/** Fetch and process events from a block range, chunked to avoid RPC limits */
+/** Fetch and process events from a block range with transactions */
 async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<void> {
-  const maxChunkSize = 10n;
-  let currentBlock = fromBlock;
+  // Use MongoDB transaction for atomic processing + state update
+  const session = await mongoose.startSession();
 
-  // Process in chunks of max 10 blocks (~20s)
-  while (currentBlock <= toBlock) {
-    const chunkEnd = currentBlock + maxChunkSize - 1n;
-    const actualEnd = chunkEnd > toBlock ? toBlock : chunkEnd;
+  try {
+    await session.withTransaction(async () => {
+      // Process events in this block range
+      await processSingleChunkInTransaction(fromBlock, toBlock, session);
 
-    try {
-      // Use transaction for atomic chunk processing + state update
-      const session = await mongoose.startSession();
-
-      try {
-        await session.withTransaction(async () => {
-          // Process events in this chunk
-          await processSingleChunkInTransaction(currentBlock, actualEnd, session);
-
-          // Update state after successful chunk processing
-          await IndexerState.findOneAndUpdate(
-            {},
-            {
-              lastProcessedBlock: actualEnd.toString(),
-              updatedAt: new Date(),
-            },
-            { upsert: true, session }
-          );
-        });
-      } finally {
-        await session.endSession();
-      }
-    } catch (error) {
-      console.error(
-        `❌ Chunk failed (blocks ${currentBlock}-${actualEnd}):`,
-        error instanceof Error ? error.message : String(error)
+      // Update state after successful processing
+      await IndexerState.findOneAndUpdate(
+        {},
+        {
+          lastProcessedBlock: toBlock.toString(),
+          updatedAt: new Date(),
+        },
+        { upsert: true, session }
       );
-      throw error; // Re-throw to trigger retry of entire range
-    }
-
-    currentBlock = actualEnd + 1n;
+    });
+  } catch (error) {
+    console.error(
+      `❌ Block range failed (blocks ${fromBlock}-${toBlock}):`,
+      error instanceof Error ? error.message : String(error)
+    );
+    throw error; // Re-throw to trigger retry
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -166,31 +153,41 @@ export async function startEventListener(): Promise<void> {
   console.log(`🌐 Network: ${config.contract.networkName} (Chain ID: ${config.contract.chainId})`);
   console.log(`🔗 RPC: ${config.contract.rpcUrl}`);
 
-  // Get last processed block or start from config
-  const state = await IndexerState.findOne();
-  let lastBlock = state?.lastProcessedBlock
-    ? BigInt(state.lastProcessedBlock.toString())
+  // Get initial last processed block for logging
+  const initialState = await IndexerState.findOne();
+  const initialLastBlock = initialState?.lastProcessedBlock
+    ? BigInt(initialState.lastProcessedBlock.toString())
     : config.indexer.startBlock;
 
-  console.log(`⏮️  Starting from block ${lastBlock}\n`);
+  console.log(`⏮️  Starting from block ${initialLastBlock}\n`);
 
-  // Poll for new blocks
+  // Poll for new blocks every POLL_INTERVAL
   setInterval(async () => {
     try {
+      // Get current last processed block from database
+      const state = await IndexerState.findOne();
+      const lastBlock = state?.lastProcessedBlock
+        ? BigInt(state.lastProcessedBlock.toString())
+        : config.indexer.startBlock;
+
       const latestBlock = await publicClient.getBlockNumber();
 
       if (latestBlock > lastBlock) {
-        await processBlockRange(lastBlock + 1n, latestBlock);
-        lastBlock = latestBlock; // Only update in-memory state after successful processing
+        // Process up to 5 blocks at a time
+        const fromBlock = lastBlock + 1n;
+        const blocksToProcess = latestBlock - lastBlock;
+        const maxBlocksPerPoll = 5n;
+        const blocksThisPoll =
+          blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
+        const toBlock = lastBlock + blocksThisPoll;
+
+        await processBlockRange(fromBlock, toBlock);
       }
     } catch (error) {
       console.error("❌ Error in event listener (will retry next interval):", {
         error: error instanceof Error ? error.message : String(error),
-        lastBlock: lastBlock.toString(),
         stack: error instanceof Error ? error.stack : undefined,
       });
-      // lastBlock is NOT updated -> same range will be retried next interval
-      // Idempotency checks in processEvent prevent duplicate processing
     }
   }, config.indexer.pollInterval);
 
