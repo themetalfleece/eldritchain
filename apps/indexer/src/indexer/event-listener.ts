@@ -281,11 +281,6 @@ export async function startEventListener(): Promise<void> {
           () => processBlockRange(fromBlock, toBlock),
           `Block range processing (${fromBlock}-${toBlock})`
         );
-      } else {
-        // No new blocks to process, log status
-        console.log(
-          `⏸️  No new blocks to process (last: ${lastProcessedBlock}, finalized: ${finalizedBlock})`
-        );
       }
     } catch (error) {
       console.error("❌ Error in event listener:", {
