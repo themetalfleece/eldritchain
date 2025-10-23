@@ -50,7 +50,7 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
   const rarity = getCreatureRarity(creatureId);
 
   // Check if event already exists to avoid duplicate key error
-  const existingEvent = await SummonEvent.findOne({ transactionHash }, { session });
+  const existingEvent = await SummonEvent.findOne({ transactionHash }).session(session);
   if (existingEvent) {
     console.log(`⏭️  Duplicate event detected (likely from another indexer): ${transactionHash}`);
     return; // Skip duplicate
