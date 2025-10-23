@@ -249,14 +249,14 @@ export async function startEventListener(): Promise<void> {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
-    } finally {
-      // Always sleep after each iteration (even on error)
-      await sleep(indexerConfig.pollInterval);
+    }
 
-      // Check if shutdown was requested during sleep
-      if (isShuttingDown) {
-        break;
-      }
+    // Always sleep after each iteration (even on error)
+    await sleep(indexerConfig.pollInterval);
+
+    // Check if shutdown was requested during sleep
+    if (isShuttingDown) {
+      break;
     }
   }
 
