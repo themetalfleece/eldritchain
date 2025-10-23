@@ -4,42 +4,9 @@ import { createPublicClient, http, parseAbiItem, type Log } from "viem";
 import { indexerConfig } from "../config.indexer";
 import { IndexerState, SummonEvent } from "../db/models";
 
-// Retry configuration
-const RETRY_CONFIG = {
-  maxRetries: 3,
-  baseDelay: 1000, // 1 second
-  maxDelay: 30000, // 30 seconds
-};
-
 /** Sleep for specified milliseconds */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** Retry a function with exponential backoff */
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  context: string,
-  retryCount = 0
-): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    if (retryCount >= RETRY_CONFIG.maxRetries) {
-      throw error;
-    }
-
-    const delay = Math.min(RETRY_CONFIG.baseDelay * Math.pow(2, retryCount), RETRY_CONFIG.maxDelay);
-
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn(
-      `⚠️  ${context} failed (attempt ${retryCount + 1}/${RETRY_CONFIG.maxRetries}), retrying in ${delay}ms:`,
-      errorMessage
-    );
-
-    await sleep(delay);
-    return retryWithBackoff(fn, context, retryCount + 1);
-  }
 }
 
 const contractAbi = [
@@ -82,6 +49,13 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
   const timestamp = new Date(Number(args.timestamp) * 1000);
   const rarity = getCreatureRarity(creatureId);
 
+  // Check if event already exists to avoid duplicate key error
+  const existingEvent = await SummonEvent.findOne({ transactionHash }, { session });
+  if (existingEvent) {
+    console.log(`⏭️  Duplicate event detected (likely from another indexer): ${transactionHash}`);
+    return; // Skip duplicate
+  }
+
   try {
     // Insert summon event within transaction
     await SummonEvent.create(
@@ -102,15 +76,6 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
       `📝 Processed event: ${transactionHash} (${address} summoned ${rarity} creature ${creatureId})`
     );
   } catch (error) {
-    // Check if it's a duplicate key error
-    if (
-      error instanceof Error &&
-      (error.message.includes("duplicate key") || error.message.includes("E11000"))
-    ) {
-      console.log(`⏭️  Duplicate event detected (likely from another indexer): ${transactionHash}`);
-      return; // Don't throw, just skip
-    }
-
     console.error(`❌ Database insert failed for ${transactionHash}:`, {
       error: error instanceof Error ? error.message : String(error),
       address,
@@ -211,8 +176,7 @@ export async function startEventListener(): Promise<void> {
 
   console.log(`⏮️  Starting from block ${initialLastBlock}`);
   console.log(`⏱️  Poll interval: ${indexerConfig.pollInterval}ms`);
-  console.log(`📊 Max blocks per poll: ${indexerConfig.maxBlocksPerPoll}`);
-  console.log(`🔄 Max retries: ${RETRY_CONFIG.maxRetries}\n`);
+  console.log(`📊 Max blocks per poll: ${indexerConfig.maxBlocksPerPoll}\n`);
 
   // Flag for graceful shutdown
   let isShuttingDown = false;
@@ -235,8 +199,8 @@ export async function startEventListener(): Promise<void> {
     try {
       // Get current blockchain state with retry
       const [state, finalizedBlock] = await Promise.all([
-        retryWithBackoff(() => IndexerState.findOne(), "Database state fetch"),
-        retryWithBackoff(async () => {
+        IndexerState.findOne(),
+        (async () => {
           try {
             // Try to get the finalized block first (most reliable)
             const block = await publicClient.getBlock({ blockTag: "finalized" });
@@ -247,7 +211,7 @@ export async function startEventListener(): Promise<void> {
             const block = await publicClient.getBlock({ blockTag: "safe" });
             return block.number;
           }
-        }, "Finalized block fetch"),
+        })(),
       ]);
 
       const lastProcessedBlock = state?.lastProcessedBlock
@@ -278,24 +242,21 @@ export async function startEventListener(): Promise<void> {
           blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
         const toBlock = lastProcessedBlock + blocksThisPoll;
 
-        await retryWithBackoff(
-          () => processBlockRange(fromBlock, toBlock),
-          `Block range processing (${fromBlock}-${toBlock})`
-        );
+        await processBlockRange(fromBlock, toBlock);
       }
     } catch (error) {
       console.error("❌ Error in event listener:", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
-    }
+    } finally {
+      // Always sleep after each iteration (even on error)
+      await sleep(indexerConfig.pollInterval);
 
-    // Wait before next iteration (even if there was an error)
-    await sleep(indexerConfig.pollInterval);
-
-    // Check if shutdown was requested during sleep
-    if (isShuttingDown) {
-      break;
+      // Check if shutdown was requested during sleep
+      if (isShuttingDown) {
+        break;
+      }
     }
   }
 
