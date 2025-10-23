@@ -4,6 +4,44 @@ import { createPublicClient, http, parseAbiItem, type Log } from "viem";
 import { indexerConfig } from "../config.indexer";
 import { IndexerState, SummonEvent } from "../db/models";
 
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 30000, // 30 seconds
+};
+
+/** Sleep for specified milliseconds */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Retry a function with exponential backoff */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  context: string,
+  retryCount = 0
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retryCount >= RETRY_CONFIG.maxRetries) {
+      throw error;
+    }
+
+    const delay = Math.min(RETRY_CONFIG.baseDelay * Math.pow(2, retryCount), RETRY_CONFIG.maxDelay);
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `⚠️  ${context} failed (attempt ${retryCount + 1}/${RETRY_CONFIG.maxRetries}), retrying in ${delay}ms:`,
+      errorMessage
+    );
+
+    await sleep(delay);
+    return retryWithBackoff(fn, context, retryCount + 1);
+  }
+}
+
 const contractAbi = [
   parseAbiItem(
     "event CreatureSummoned(address indexed summoner, uint16 indexed creatureId, uint16 level, uint256 timestamp)"
@@ -44,13 +82,6 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
   const timestamp = new Date(Number(args.timestamp) * 1000);
   const rarity = getCreatureRarity(creatureId);
 
-  // Check if already processed (idempotency)
-  const exists = await SummonEvent.findOne({ transactionHash }).session(session);
-  if (exists) {
-    console.log(`⏭️  Skipping duplicate: ${transactionHash}`);
-    return;
-  }
-
   try {
     // Insert summon event within transaction
     await SummonEvent.create(
@@ -67,7 +98,19 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
       ],
       { session }
     );
+    console.log(
+      `📝 Processed event: ${transactionHash} (${address} summoned ${rarity} creature ${creatureId})`
+    );
   } catch (error) {
+    // Check if it's a duplicate key error
+    if (
+      error instanceof Error &&
+      (error.message.includes("duplicate key") || error.message.includes("E11000"))
+    ) {
+      console.log(`⏭️  Duplicate event detected (likely from another indexer): ${transactionHash}`);
+      return; // Don't throw, just skip
+    }
+
     console.error(`❌ Database insert failed for ${transactionHash}:`, {
       error: error instanceof Error ? error.message : String(error),
       address,
@@ -125,8 +168,8 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
       // Process events in this block range
       await processSingleChunkInTransaction(fromBlock, toBlock, session);
 
-      // Update state after successful processing
-      await IndexerState.findOneAndUpdate(
+      // Atomically update state after successful processing
+      const result = await IndexerState.findOneAndUpdate(
         {},
         {
           lastProcessedBlock: toBlock.toString(),
@@ -134,6 +177,10 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
         },
         { upsert: true, session }
       );
+
+      if (!result) {
+        throw new Error("Failed to update indexer state");
+      }
     });
   } catch (error) {
     console.error(
@@ -161,37 +208,100 @@ export async function startEventListener(): Promise<void> {
     ? BigInt(initialState.lastProcessedBlock.toString())
     : indexerConfig.startBlock;
 
-  console.log(`⏮️  Starting from block ${initialLastBlock}\n`);
+  console.log(`⏮️  Starting from block ${initialLastBlock}`);
+  console.log(`⏱️  Poll interval: ${indexerConfig.pollInterval}ms`);
+  console.log(`📊 Max blocks per poll: ${indexerConfig.maxBlocksPerPoll}`);
+  console.log(`🔄 Max retries: ${RETRY_CONFIG.maxRetries}\n`);
 
-  // Poll for new blocks every POLL_INTERVAL
-  setInterval(async () => {
+  // Flag for graceful shutdown
+  let isShuttingDown = false;
+
+  // Graceful shutdown handler
+  process.on("SIGINT", () => {
+    console.log("\n🛑 Received SIGINT, shutting down gracefully...");
+    isShuttingDown = true;
+  });
+
+  process.on("SIGTERM", () => {
+    console.log("\n🛑 Received SIGTERM, shutting down gracefully...");
+    isShuttingDown = true;
+  });
+
+  console.log("✅ Event listener started\n");
+
+  // Continuous loop instead of setInterval to ensure sequential processing
+  while (!isShuttingDown) {
     try {
-      // Get current last processed block from database
-      const state = await IndexerState.findOne();
-      const lastBlock = state?.lastProcessedBlock
+      // Get current blockchain state with retry
+      const [state, finalizedBlock] = await Promise.all([
+        retryWithBackoff(() => IndexerState.findOne(), "Database state fetch"),
+        retryWithBackoff(async () => {
+          try {
+            // Try to get the finalized block first (most reliable)
+            const block = await publicClient.getBlock({ blockTag: "finalized" });
+            return block.number;
+          } catch (error) {
+            // Fallback to safe block if finalized is not supported
+            console.warn("⚠️  Finalized block not supported, using safe block as fallback");
+            const block = await publicClient.getBlock({ blockTag: "safe" });
+            return block.number;
+          }
+        }, "Finalized block fetch"),
+      ]);
+
+      const lastProcessedBlock = state?.lastProcessedBlock
         ? BigInt(state.lastProcessedBlock.toString())
         : indexerConfig.startBlock;
 
-      const latestBlock = await publicClient.getBlockNumber();
+      // Finalized blocks are crypto-economically secure and should never go backwards
+      // If they do, it's a critical network issue that requires manual intervention
+      // No automatic reorg handling needed since finalized blocks are immutable by design
+      if (finalizedBlock < lastProcessedBlock) {
+        console.error(
+          `🚨 CRITICAL: Finalized block (${finalizedBlock}) is behind processed block (${lastProcessedBlock}). ` +
+            `This indicates a major network issue. Manual intervention required.`
+        );
+        // Don't automatically reset - this requires human attention
+        throw new Error(
+          `Finalized block went backwards: ${finalizedBlock} < ${lastProcessedBlock}. ` +
+            `This indicates a critical network issue requiring manual intervention.`
+        );
+      }
 
-      if (latestBlock > lastBlock) {
+      if (finalizedBlock > lastProcessedBlock) {
         // Process up to maxBlocksPerPoll blocks at a time
-        const fromBlock = lastBlock + 1n;
-        const blocksToProcess = latestBlock - lastBlock;
+        const fromBlock = lastProcessedBlock + 1n;
+        const blocksToProcess = finalizedBlock - lastProcessedBlock;
         const maxBlocksPerPoll = BigInt(indexerConfig.maxBlocksPerPoll);
         const blocksThisPoll =
           blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
-        const toBlock = lastBlock + blocksThisPoll;
+        const toBlock = lastProcessedBlock + blocksThisPoll;
 
-        await processBlockRange(fromBlock, toBlock);
+        await retryWithBackoff(
+          () => processBlockRange(fromBlock, toBlock),
+          `Block range processing (${fromBlock}-${toBlock})`
+        );
+      } else {
+        // No new blocks to process, log status
+        console.log(
+          `⏸️  No new blocks to process (last: ${lastProcessedBlock}, finalized: ${finalizedBlock})`
+        );
       }
     } catch (error) {
-      console.error("❌ Error in event listener (will retry next interval):", {
+      console.error("❌ Error in event listener:", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
     }
-  }, indexerConfig.pollInterval);
 
-  console.log("✅ Event listener started\n");
+    // Wait before next iteration (even if there was an error)
+    await sleep(indexerConfig.pollInterval);
+
+    // Check if shutdown was requested during sleep
+    if (isShuttingDown) {
+      break;
+    }
+  }
+
+  console.log("✅ Event listener stopped gracefully\n");
 }

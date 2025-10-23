@@ -13,16 +13,7 @@ async function main() {
   console.log("✅ Event Indexer operational!\n");
 }
 
-// Handle graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\n🛑 Event Indexer shutting down gracefully...");
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  console.log("\n🛑 Event Indexer shutting down gracefully...");
-  process.exit(0);
-});
+// Graceful shutdown is handled within the event listener loop
 
 // Start the application
 main().catch((error) => {

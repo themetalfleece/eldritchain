@@ -68,6 +68,19 @@ START_BLOCK=12345678  # Replace with your deployment block number
 3. Note the block number
 4. Set `START_BLOCK=<that_block_number>` in your `.env`
 
+**🛡️ Race Condition Protection:**
+
+The indexer includes built-in protection against race conditions:
+
+- **Finalized Block Processing**: Only processes blocks that are finalized (crypto-economically secure)
+- **Sequential Processing**: Uses a continuous loop instead of timers to ensure operations complete before starting new ones
+- **Atomic State Updates**: Uses MongoDB transactions for atomic state changes
+- **Duplicate Prevention**: Handles multiple indexer instances gracefully
+- **Critical Error Detection**: Detects major network issues and stops processing for manual intervention
+- **Retry Logic**: Exponential backoff for failed operations (up to 3 retries)
+- **Graceful Shutdown**: Proper signal handling for clean termination
+- **Network-Aware Finality**: Uses native network finality mechanisms with safe block fallback
+
 **Examples:**
 
 ```env
@@ -122,6 +135,23 @@ yarn start:indexer
 - Restart indexer without affecting API
 - Better resource allocation
 - Easier debugging and monitoring
+
+**🔒 Finalized Block Processing**
+
+The indexer uses **finalized blocks** instead of confirmation depth:
+
+- **Finalized**: Blocks that are crypto-economically secure and cannot be reorganized
+- **Safe**: Blocks that are safe from reorgs under honest majority assumptions
+- **Network-aware**: Uses each network's native finality mechanisms
+- **Automatic fallback**: Falls back to safe blocks if finalized blocks aren't supported
+
+**Benefits over confirmation blocks:**
+- ✅ Uses native network finality (more accurate)
+- ✅ Adapts to different networks automatically
+- ✅ No manual configuration needed
+- ✅ More reliable than hardcoded confirmation counts
+- ✅ Supports all EVM networks with finality
+- ✅ **No complex reorg handling** - finalized blocks are immutable by design
 
 ## Docker Deployment 🐳
 
@@ -345,11 +375,14 @@ Response:
 
 ## How It Works
 
-1. **Event Listening**: Continuously polls the blockchain for `CreatureSummoned` events
-2. **Data Processing**: Categorizes creatures by rarity (deity/epic/rare/common)
-3. **Database Storage**: Stores each summon event as a separate document in MongoDB
-4. **Real-time Aggregation**: API aggregates stats on-demand from events
-5. **Idempotency**: Duplicate events are automatically skipped using transaction hash
+1. **Sequential Processing**: Uses a continuous loop for sequential block processing (no overlapping operations)
+2. **Finalized Block Detection**: Polls for finalized blocks using network-native finality mechanisms
+3. **Event Listening**: Fetches `CreatureSummoned` events from finalized block ranges
+4. **Data Processing**: Categorizes creatures by rarity (deity/epic/rare/common)
+5. **Database Storage**: Stores each summon event as a separate document in MongoDB with atomic transactions
+6. **Critical Error Detection**: Detects major network issues and halts processing for manual intervention
+7. **Real-time Aggregation**: API aggregates stats on-demand from events
+8. **Idempotency**: Duplicate events are automatically skipped using transaction hash
 
 ### Data Model
 
@@ -456,6 +489,47 @@ docker compose up -d
 
 - Adjust `POLL_INTERVAL` (lower = faster, but more RPC calls)
 - Use WebSocket RPC for real-time updates
+- The indexer uses sequential processing - each batch must complete before the next starts
+- Events are delayed by network finality time (typically 2-15 minutes depending on network)
+
+**"Missing events" or "Race condition issues"**
+
+- The indexer has built-in race condition protection using finalized blocks
+- Ensure only one indexer instance is processing each block range
+- Monitor logs for "🚨 CRITICAL" messages (indicates major network issues requiring manual intervention)
+- Verify MongoDB connectivity and transaction support
+- Check if the network supports finalized blocks (fallback to safe blocks if needed)
+
+**"Duplicate events"**
+
+- Multiple indexer instances detected
+- Check if multiple processes are running the same indexer
+- Each indexer instance should use a different database or coordination mechanism
+- The system handles duplicates gracefully but logs warnings
+
+**"Indexer seems slow or not processing"**
+
+- The indexer uses sequential processing - each operation completes before the next starts
+- Check logs for "⏸️ No new blocks to process" messages (this is normal when caught up)
+- Monitor "📦 Processing blocks" messages to see actual progress
+- Large block ranges may take time due to RPC calls and database operations
+- Use `MAX_BLOCKS_PER_POLL` to adjust batch size (default: 50 blocks per batch)
+- Finalized block processing adds natural delay based on network finality (2-15 minutes)
+
+**"Finalized block fallback warning"**
+
+- If you see "⚠️ Finalized block not supported, using safe block as fallback" this is normal
+- Some testnets or older networks don't support finalized blocks
+- The indexer automatically falls back to safe blocks, which is still reorg-resistant
+
+**"🚨 CRITICAL: Finalized block went backwards"**
+
+- This indicates a major network issue or potential data corruption
+- Finalized blocks should never go backwards under normal circumstances
+- The indexer will **stop processing** and require manual intervention
+- **Action required**: Check network status, verify RPC provider, and restart indexer after resolving the issue
+- Contact your RPC provider if this happens frequently
+- This is extremely rare and usually indicates network-level problems
 
 ## Architecture
 
