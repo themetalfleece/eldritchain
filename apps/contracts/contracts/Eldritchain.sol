@@ -33,12 +33,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   mapping(address => uint256) public lastSummonTime;
 
   // Events
-  event CreatureSummoned(
-    address indexed summoner,
-    uint16 indexed creatureId,
-    uint16 level,
-    uint256 timestamp
-  );
+  event CreatureSummoned(address indexed summoner, uint16 indexed creatureId, uint16 level, uint256 timestamp);
 
   event CreaturesAdded(uint16 commonLast, uint16 rareLast, uint16 epicLast, uint16 deityLast);
 
@@ -81,12 +76,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   }
 
   // Allow owner to add creatures (can only increase, not decrease)
-  function addCreatures(
-    uint16 _commonLast,
-    uint16 _rareLast,
-    uint16 _epicLast,
-    uint16 _deityLast
-  ) external onlyOwner {
+  function addCreatures(uint16 _commonLast, uint16 _rareLast, uint16 _epicLast, uint16 _deityLast) external onlyOwner {
     require(_commonLast >= commonLast, "Cannot reduce common creatures");
     require(_rareLast >= rareLast, "Cannot reduce rare creatures");
     require(_epicLast >= epicLast, "Cannot reduce epic creatures");
@@ -131,9 +121,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   }
 
   // Get user's collection across all namespaces
-  function getUserCollection(
-    address user
-  ) public view returns (uint16[] memory creatureIds, uint16[] memory levels) {
+  function getUserCollection(address user) public view returns (uint16[] memory creatureIds, uint16[] memory levels) {
     uint256 count = 0;
 
     // Count owned creatures in each namespace
@@ -196,9 +184,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     // Generate pseudo-random number
     uint256 randomValue = uint256(
-      keccak256(
-        abi.encodePacked(block.timestamp, block.prevrandao, msg.sender, blockhash(block.number - 1))
-      )
+      keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender, blockhash(block.number - 1)))
     );
 
     // Determine rarity tier (use basis points: 10000 = 100%)

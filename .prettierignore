@@ -20,6 +20,13 @@ coverage/
 .env
 .env.local
 .env.*.local
+.env.example
+
+# Config files that shouldn't be formatted
+.gitignore
+**/.gitignore
+*.ini
+**/*.ini
 
 # Logs
 *.log

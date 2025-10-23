@@ -11,8 +11,8 @@
     "verify": "hardhat verify --network ${NETWORK:-polygonAmoy}",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --write \"**/*.{ts,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,json,md}\""
+    "format": "prettier --write \"**/*.{ts,js,json,md,sol}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md,sol}\""
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",

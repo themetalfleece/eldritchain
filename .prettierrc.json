@@ -5,7 +5,11 @@
   "printWidth": 100,
   "tabWidth": 2,
   "arrowParens": "always",
-  "plugins": ["prettier-plugin-solidity"],
+  "plugins": [
+    "prettier-plugin-solidity"
+  ],
+  "requirePragma": false,
+  "insertPragma": false,
   "overrides": [
     {
       "files": "*.sol",

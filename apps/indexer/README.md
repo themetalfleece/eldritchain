@@ -146,6 +146,7 @@ The indexer uses **finalized blocks** instead of confirmation depth:
 - **Automatic fallback**: Falls back to safe blocks if finalized blocks aren't supported
 
 **Benefits over confirmation blocks:**
+
 - ✅ Uses native network finality (more accurate)
 - ✅ Adapts to different networks automatically
 - ✅ No manual configuration needed
