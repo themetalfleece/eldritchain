@@ -172,9 +172,9 @@ export async function startEventListener(): Promise<void> {
   const initialState = await IndexerState.findOne();
   const initialLastBlock = initialState?.lastProcessedBlock
     ? BigInt(initialState.lastProcessedBlock.toString())
-    : indexerConfig.startBlock;
+    : indexerConfig.startBlock - 1n; // Use startBlock - 1 so first iteration processes startBlock
 
-  console.log(`⏮️  Starting from block ${initialLastBlock}`);
+  console.log(`⏮️  Starting from block ${initialLastBlock + 1n}`);
   console.log(`⏱️  Poll interval: ${indexerConfig.pollInterval}ms`);
   console.log(`📊 Max blocks per poll: ${indexerConfig.maxBlocksPerPoll}\n`);
 
@@ -216,27 +216,26 @@ export async function startEventListener(): Promise<void> {
 
       const lastProcessedBlock = state?.lastProcessedBlock
         ? BigInt(state.lastProcessedBlock.toString())
-        : indexerConfig.startBlock;
+        : indexerConfig.startBlock - 1n;
 
-      // Finalized blocks are crypto-economically secure and should never go backwards
-      // If they do, it's a critical network issue that requires manual intervention
-      // No automatic reorg handling needed since finalized blocks are immutable by design
-      if (finalizedBlock < lastProcessedBlock) {
+      // Use a safe range: process blocks up to X blocks behind finalized
+      // This handles temporary finalized block fluctuations on some networks
+      const safeBlock = finalizedBlock - indexerConfig.safeBlockRange;
+
+      if (safeBlock < lastProcessedBlock) {
         console.error(
-          `🚨 CRITICAL: Finalized block (${finalizedBlock}) is behind processed block (${lastProcessedBlock}). ` +
-            `This indicates a major network issue. Manual intervention required.`
+          `🚨 CRITICAL: Safe block (${safeBlock}) is behind processed block (${lastProcessedBlock}). ` +
+            `Finalized: ${finalizedBlock}. This indicates a major network issue.`
         );
-        // Don't automatically reset - this requires human attention
         throw new Error(
-          `Finalized block went backwards: ${finalizedBlock} < ${lastProcessedBlock}. ` +
-            `This indicates a critical network issue requiring manual intervention.`
+          `Critical: Safe block range (finalized - 100) is significantly behind. Requires manual intervention.`
         );
       }
 
-      if (finalizedBlock > lastProcessedBlock) {
+      if (safeBlock > lastProcessedBlock) {
         // Process up to maxBlocksPerPoll blocks at a time
         const fromBlock = lastProcessedBlock + 1n;
-        const blocksToProcess = finalizedBlock - lastProcessedBlock;
+        const blocksToProcess = safeBlock - lastProcessedBlock;
         const maxBlocksPerPoll = BigInt(indexerConfig.maxBlocksPerPoll);
         const blocksThisPoll =
           blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
@@ -249,10 +248,10 @@ export async function startEventListener(): Promise<void> {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
+    } finally {
+      // Always sleep after each iteration (even on error)
+      await sleep(indexerConfig.pollInterval);
     }
-
-    // Always sleep after each iteration (even on error)
-    await sleep(indexerConfig.pollInterval);
 
     // Check if shutdown was requested during sleep
     if (isShuttingDown) {

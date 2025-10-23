@@ -24,4 +24,7 @@ export const indexerConfig = {
   startBlock: assertEnvBigInt(process.env.START_BLOCK, "START_BLOCK"),
   pollInterval: assertEnvInt(process.env.POLL_INTERVAL, "POLL_INTERVAL"),
   maxBlocksPerPoll: assertEnvInt(process.env.MAX_BLOCKS_PER_POLL, "MAX_BLOCKS_PER_POLL"),
+  safeBlockRange: process.env.SAFE_BLOCK_RANGE
+    ? assertEnvBigInt(process.env.SAFE_BLOCK_RANGE, "SAFE_BLOCK_RANGE")
+    : 100n, // Default: 100 blocks behind finalized
 };

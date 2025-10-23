@@ -144,6 +144,26 @@ The indexer uses **finalized blocks** instead of confirmation depth:
 - **Safe**: Blocks that are safe from reorgs under honest majority assumptions
 - **Network-aware**: Uses each network's native finality mechanisms
 - **Automatic fallback**: Falls back to safe blocks if finalized blocks aren't supported
+- **Safe Block Range**: Processes blocks up to `SAFE_BLOCK_RANGE` blocks behind finalized to handle network fluctuations
+
+**Safe Block Range:**
+
+Some networks have temporary finalized block fluctuations. The indexer uses a "safe range" approach:
+
+- Processes blocks that are `SAFE_BLOCK_RANGE` blocks behind the finalized block
+- Handles network conditions that cause finalized blocks to temporarily move backward
+- Default: 100 blocks (configurable via `SAFE_BLOCK_RANGE` env variable)
+
+**Example:**
+
+```
+Finalized block: 1000
+Safe block range: 100 blocks
+Safe block to process up to: 1000 - 100 = 900
+
+If finalized temporarily drops to 950, safe block becomes 850.
+Indexer continues processing and waits for finalized to stabilize.
+```
 
 **Benefits over confirmation blocks:**
 
@@ -429,6 +449,19 @@ Environment variables in `.env` (all REQUIRED):
 | `PORT`             | API server port                                      | `3001`                                         |
 | `START_BLOCK`      | Block to start indexing from (use deployment block!) | `77678611` or `0`                              |
 | `POLL_INTERVAL`    | Polling interval in ms                               | `12000` (12 seconds)                           |
+
+**Optional variables:**
+
+| Variable              | Description                                                       | Default | Example            |
+| --------------------- | ----------------------------------------------------------------- | ------- | ------------------ |
+| `MAX_BLOCKS_PER_POLL` | Max blocks to process per poll                                    | `50`    | `50`, `100`        |
+| `SAFE_BLOCK_RANGE`    | Blocks behind finalized to process (handles network fluctuations) | `100`   | `50`, `100`, `200` |
+
+**💡 SAFE_BLOCK_RANGE Recommendations:**
+
+- **Ethereum Mainnet**: `50` (finalized blocks very stable)
+- **Polygon Mainnet**: `100` (good balance, default)
+- **Testnets**: `200` (finality can fluctuate more)
 
 **⚠️ All variables are required!** The app will fail to start with a clear error message if any are missing.
 
