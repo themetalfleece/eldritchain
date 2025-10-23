@@ -169,7 +169,7 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
       await processSingleChunkInTransaction(fromBlock, toBlock, session);
 
       // Atomically update state after successful processing
-      const result = await IndexerState.findOneAndUpdate(
+      const result = await IndexerState.updateOne(
         {},
         {
           lastProcessedBlock: toBlock.toString(),
@@ -178,8 +178,9 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
         { upsert: true, session }
       );
 
-      if (!result) {
-        throw new Error("Failed to update indexer state");
+      // Verify that either an update or insert occurred
+      if (result.modifiedCount === 0 && result.upsertedCount === 0) {
+        throw new Error("Failed to update or insert indexer state");
       }
     });
   } catch (error) {
