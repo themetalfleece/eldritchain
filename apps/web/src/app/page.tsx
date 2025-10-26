@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header.component";
 import { InteractiveSection } from "@/components/InteractiveSection.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
 import { RecentSummons } from "@/components/RecentSummons.component";
@@ -64,8 +63,6 @@ export default async function Home() {
 
   return (
     <div className={styles.container}>
-      <Header />
-
       <main className={styles.main.container}>
         <div className={styles.main.hero.container}>
           <h2 className={styles.main.hero.title}>Daily Creature Summoning</h2>

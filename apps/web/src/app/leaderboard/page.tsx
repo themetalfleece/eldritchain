@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -7,8 +6,6 @@ import { styles } from "./page.styles";
 export default function LeaderboardPage() {
   return (
     <div className={styles.container}>
-      <Header />
-
       <main className={styles.main.container}>
         <div className={styles.main.hero.container}>
           <p className={styles.main.hero.description}>
