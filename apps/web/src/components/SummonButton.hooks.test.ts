@@ -375,7 +375,7 @@ describe("SummonButton Hooks", () => {
       );
 
       expect(result.current.getStatusMessage()).toBe(
-        "You are committing your random value to the blockchain... [Transaction 1/2]"
+        "You are committing your random value to the blockchain..."
       );
     });
 
