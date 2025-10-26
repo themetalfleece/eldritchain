@@ -27,7 +27,7 @@ async function main() {
   console.log(`PROXY_ADDRESS=${address}`);
 
   console.log("\nTo upgrade the contract later, run:");
-  console.log(`yarn upgrade`);
+  console.log(`yarn upgrade ${network}`);
 }
 
 main()

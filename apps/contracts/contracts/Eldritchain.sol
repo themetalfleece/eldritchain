@@ -211,30 +211,23 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   }
 
   function canCommit(address user) public view returns (bool) {
-    // Check if user is not on cooldown (has summoned today)
+    // User has summoned today -> can't commit
     if (lastSummonTime[user] != 0) {
       if (getCurrentDay(block.timestamp) <= getCurrentDay(lastSummonTime[user])) {
         return false;
       }
     }
 
-    // Check if user already has a commitment for today
     Commitment memory commitment = commitments[user];
 
-    // No commitment, can commit
+    // No commitment -> can commit
     if (commitment.hash == bytes32(0)) return true;
 
-    // Commitment from different day, can commit
+    // Commitment from different day -> can commit
     if (getCurrentDay(block.timestamp) != getCurrentDay(commitment.commitTimestamp)) {
       return true;
     }
 
-    // Commitment is expired (255+ blocks old), can commit
-    if (!isCommitmentValidForDay(user)) {
-      return true;
-    }
-
-    // Already committed today and commitment is still valid, can't commit
     return false;
   }
 
@@ -280,7 +273,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   function isCommitmentValidForDay(address user) public view returns (bool) {
     Commitment memory commitment = commitments[user];
 
-    // Must have a commitment
+    // Must have a commitment (hash not zero)
     if (commitment.hash == bytes32(0)) return false;
 
     // Must be within the same day as commit

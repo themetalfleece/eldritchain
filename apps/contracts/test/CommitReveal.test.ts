@@ -235,9 +235,114 @@ describe("Eldritchain Commit-Reveal", function () {
     });
   });
 
+  describe("getNextSummonTime Function", function () {
+    it("Should return current timestamp for new address", async function () {
+      const newWallet = ethers.Wallet.createRandom().connect(ethers.provider);
+      const nextSummonTime = await eldritchain.getNextSummonTime(newWallet.address);
+      const currentTime = (await ethers.provider.getBlock("latest"))!.timestamp;
+
+      // Should return current time for new address
+      expect(nextSummonTime).to.be.closeTo(currentTime, 5);
+    });
+
+    it("Should not revert for address with uninitialized commitment", async function () {
+      // Use user1 who hasn't committed yet
+      const nextSummonTime = await eldritchain.getNextSummonTime(user1.address);
+      const currentTime = (await ethers.provider.getBlock("latest"))!.timestamp;
+
+      // Should return current time
+      expect(nextSummonTime).to.be.closeTo(currentTime, 5);
+    });
+  });
+
+  describe("getCurrentDay Function", function () {
+    it("Should handle zero timestamp", async function () {
+      // We can't directly test getCurrentDay since it's internal,
+      // but we can test it indirectly through isCommitmentValidForDay
+      const newWallet = ethers.Wallet.createRandom().connect(ethers.provider);
+
+      // This should not revert even with uninitialized commitment
+      expect(await eldritchain.isCommitmentValidForDay(newWallet.address)).to.be.false;
+    });
+
+    it("Should handle current timestamp", async function () {
+      // Test with a real commitment to ensure getCurrentDay works with current time
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(ethers.solidityPacked(["uint256"], [randomValue]));
+
+      await eldritchain.connect(user1).commitRandom(hash);
+
+      // This should work with current blockchain timestamp
+      expect(await eldritchain.isCommitmentValidForDay(user1.address)).to.be.true;
+    });
+  });
+
+  describe("isCommitmentValidForDay Function", function () {
+    it("Should return false for new address (no commitment)", async function () {
+      const newWallet = ethers.Wallet.createRandom().connect(ethers.provider);
+      expect(await eldritchain.isCommitmentValidForDay(newWallet.address)).to.be.false;
+    });
+
+    it("Should return false for address with uninitialized commitment", async function () {
+      // Use user1 who hasn't committed yet
+      expect(await eldritchain.isCommitmentValidForDay(user1.address)).to.be.false;
+    });
+
+    it("Should return true for valid commitment on same day", async function () {
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(ethers.solidityPacked(["uint256"], [randomValue]));
+
+      await eldritchain.connect(user1).commitRandom(hash);
+
+      // Should be valid immediately after commit
+      expect(await eldritchain.isCommitmentValidForDay(user1.address)).to.be.true;
+    });
+
+    it("Should return false for commitment from different day", async function () {
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(ethers.solidityPacked(["uint256"], [randomValue]));
+
+      await eldritchain.connect(user1).commitRandom(hash);
+
+      // Fast forward to next day
+      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Should be invalid after day change
+      expect(await eldritchain.isCommitmentValidForDay(user1.address)).to.be.false;
+    });
+  });
+
   describe("canCommit Function", function () {
     it("Should return true for new user", async function () {
       expect(await eldritchain.canCommit(user1.address)).to.be.true;
+    });
+
+    it("Should return true for completely new address (never summoned or committed)", async function () {
+      // Create a completely new address that has never interacted with the contract
+      const newWallet = ethers.Wallet.createRandom().connect(ethers.provider);
+
+      // Verify the address has never summoned (lastSummonTime should be 0)
+      const lastSummonTime = await eldritchain.getLastSummonTime(newWallet.address);
+      expect(lastSummonTime).to.equal(0);
+
+      // Verify the address has no commitment
+      const commitment = await eldritchain.commitments(newWallet.address);
+      expect(commitment.hash).to.equal(
+        "0x0000000000000000000000000000000000000000000000000000000000000000"
+      );
+      expect(commitment.commitTimestamp).to.equal(0);
+      expect(commitment.targetBlockNumber).to.equal(0);
+      expect(commitment.isRevealed).to.be.false;
+
+      // Should be able to commit
+      expect(await eldritchain.canCommit(newWallet.address)).to.be.true;
     });
 
     it("Should return true for user who is not on cooldown and hasn't committed today", async function () {

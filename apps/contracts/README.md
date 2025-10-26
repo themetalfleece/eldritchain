@@ -40,9 +40,9 @@ All commands can be run from the root directory:
 ```bash
 yarn contracts compile      # Compile contracts
 yarn contracts test         # Run test suite
-yarn contracts deploy       # Deploy to network
-yarn contracts upgrade      # Upgrade existing deployment
-yarn contracts add-creatures # Sync creature data
+yarn contracts deploy [network]       # Deploy to network (default: polygonAmoy)
+yarn contracts upgrade [network]      # Upgrade existing deployment (default: polygonAmoy)
+yarn contracts add-creatures [network] # Sync creature data (default: polygonAmoy)
 yarn contracts lint         # Lint TypeScript
 yarn contracts format       # Format code
 ```
@@ -63,6 +63,7 @@ PRIVATE_KEY=your_private_key_without_0x_prefix
 
 # OPTIONAL - Network to deploy to (defaults to polygonAmoy)
 # Options: "polygonAmoy" | "polygon" | "sepolia" | "mainnet"
+# Note: You can also specify network as a parameter: yarn deploy polygon
 NETWORK=polygonAmoy
 
 # OPTIONAL - Etherscan API key for contract verification
@@ -177,17 +178,20 @@ Ensure your deployment wallet has Sepolia ETH:
 ### Step 2: Deploy the Contract
 
 ```bash
-# From root (specify network with --network flag)
-yarn contracts deploy --network polygonAmoy
+# From root (specify network as parameter)
+yarn contracts deploy polygonAmoy
 
 # Or from apps/contracts
-yarn deploy --network polygonAmoy
+yarn deploy polygonAmoy
 
 # For mainnet
-yarn deploy --network polygon
+yarn deploy polygon
+
+# Default to polygonAmoy if no network specified
+yarn deploy
 ```
 
-**⚠️ Important:** You MUST specify `--network <name>` to deploy to a real blockchain. Without it, Hardhat uses a local in-memory network (for testing only).
+**⚠️ Important:** You MUST specify a network parameter to deploy to a real blockchain. Without it, Hardhat uses a local in-memory network (for testing only).
 
 This will:
 
@@ -212,7 +216,7 @@ NEXT_PUBLIC_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
 Verify your contract on Etherscan for transparency:
 
 ```bash
-npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
+yarn verify sepolia <CONTRACT_ADDRESS>
 ```
 
 Replace `<CONTRACT_ADDRESS>` with your deployed address.
@@ -229,9 +233,12 @@ Once verified, users can view your contract source code on Etherscan.
 
 ```bash
 # Set PROXY_ADDRESS in .env, then from root:
-yarn contracts add-creatures
+yarn contracts add-creatures polygonAmoy
 
 # Or from apps/contracts:
+yarn add-creatures polygonAmoy
+
+# Default to polygonAmoy if no network specified
 yarn add-creatures
 ```
 
