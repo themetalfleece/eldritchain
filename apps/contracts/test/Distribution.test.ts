@@ -54,7 +54,25 @@ describe("Distribution Test", function () {
         await ethers.provider.send("evm_increaseTime", [timeOffset]);
         await ethers.provider.send("evm_mine", []);
 
-        const tx = await eldritchain.connect(currentUser).summon();
+        // Use commit-reveal scheme for summoning
+        const randomValue = BigInt(
+          `123456789012345678901234567890123456789012345678901234567890${i.toString().padStart(4, "0")}`
+        );
+        const hash = ethers.keccak256(
+          ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [randomValue])
+        );
+
+        // Commit
+        await eldritchain.connect(currentUser).commitRandom(hash);
+
+        // Wait for target block
+        await ethers.provider.send("evm_mine", []);
+        await ethers.provider.send("evm_mine", []);
+        await ethers.provider.send("evm_mine", []);
+        await ethers.provider.send("evm_mine", []);
+        await ethers.provider.send("evm_mine", []);
+
+        const tx = await eldritchain.connect(currentUser).summon(randomValue);
         const receipt = await tx.wait();
 
         // Extract creature ID from event

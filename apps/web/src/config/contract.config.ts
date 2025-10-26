@@ -4,15 +4,36 @@ export const CONTRACT_ADDRESS = env.contractAddress;
 
 export const CONTRACT_ABI = [
   {
-    inputs: [],
+    inputs: [{ internalType: "uint256", name: "randomValue", type: "uint256" }],
     name: "summon",
     outputs: [{ internalType: "uint16", name: "", type: "uint16" }],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
+    inputs: [{ internalType: "bytes32", name: "hash", type: "bytes32" }],
+    name: "commitRandom",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "user", type: "address" }],
     name: "canSummon",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "canCommit",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "isCommitmentValidForDay",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
@@ -31,6 +52,25 @@ export const CONTRACT_ABI = [
     inputs: [{ internalType: "address", name: "user", type: "address" }],
     name: "getNextSummonTime",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getCommitment",
+    outputs: [
+      {
+        internalType: "struct Eldritchain.Commitment",
+        name: "",
+        type: "tuple",
+        components: [
+          { internalType: "bytes32", name: "hash", type: "bytes32" },
+          { internalType: "uint256", name: "commitTimestamp", type: "uint256" },
+          { internalType: "uint256", name: "targetBlockNumber", type: "uint256" },
+          { internalType: "bool", name: "isRevealed", type: "bool" },
+        ],
+      },
+    ],
     stateMutability: "view",
     type: "function",
   },
@@ -73,6 +113,37 @@ export const CONTRACT_ABI = [
       },
     ],
     name: "CreatureSummoned",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "hash",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "commitTimestamp",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "targetBlockNumber",
+        type: "uint256",
+      },
+    ],
+    name: "RandomCommitted",
     type: "event",
   },
 ] as const;

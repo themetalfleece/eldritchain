@@ -54,6 +54,11 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 # Options: "polygonAmoy" | "polygon" | "sepolia" | "mainnet"
 NEXT_PUBLIC_NETWORK=polygonAmoy
 
+# Custom RPC URL (OPTIONAL)
+# Override the default RPC endpoint for better reliability
+# Useful for development with Hardhat or custom node providers
+NEXT_PUBLIC_RPC_URL=http://localhost:8545
+
 # Indexer API URL (OPTIONAL - for leaderboard)
 # Leave empty to hide leaderboard
 NEXT_PUBLIC_INDEXER_API_URL=http://localhost:3001
@@ -86,6 +91,20 @@ Simply set `NEXT_PUBLIC_NETWORK` to:
 - `mainnet` - Ethereum mainnet (expensive - $2-10 per transaction)
 
 Network configurations are predefined in `@eldritchain/common`. To add more networks, edit `packages/common/src/config/networks.ts`.
+
+**Custom RPC URL (Optional):**
+
+For better reliability or development purposes, you can override the default RPC endpoint:
+
+- **Development with Hardhat**: `NEXT_PUBLIC_RPC_URL=http://localhost:8545`
+- **Custom node provider**: `NEXT_PUBLIC_RPC_URL=https://your-custom-rpc-endpoint.com`
+- **Alchemy/Infura**: `NEXT_PUBLIC_RPC_URL=https://polygon-amoy.g.alchemy.com/v2/your-api-key`
+
+This is particularly useful when:
+- Testing with local Hardhat network
+- Using a more reliable RPC provider
+- Avoiding rate limits on public RPC endpoints
+- Debugging transaction issues
 
 **Indexer API (Optional):**
 
@@ -347,6 +366,14 @@ The app can be deployed to any platform that supports Next.js:
 - Ensure you have enough Sepolia ETH for gas
 - Check you're not on cooldown
 - Verify contract is deployed and accessible
+- If using custom RPC, ensure the endpoint is working and accessible
+
+**RPC connection issues:**
+
+- Check if `NEXT_PUBLIC_RPC_URL` is accessible from your browser
+- Verify the RPC endpoint supports the required methods
+- For local Hardhat, ensure `npx hardhat node` is running
+- Try switching back to default RPC by removing `NEXT_PUBLIC_RPC_URL`
 
 **"Invalid contract address" or "Missing env variable" error:**
 

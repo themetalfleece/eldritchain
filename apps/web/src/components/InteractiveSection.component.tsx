@@ -10,7 +10,7 @@ interface InteractiveSectionProps {
 export function InteractiveSection({ summonSectionStyles }: InteractiveSectionProps) {
   return (
     <div className={summonSectionStyles}>
-      <SummonButton onSummonComplete={() => {}} />
+      <SummonButton />
       <ViewCollectionButton />
     </div>
   );

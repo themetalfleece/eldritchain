@@ -11,6 +11,7 @@ export const styles = {
 
   timerContainer: "text-gray-400",
   timerValue: "text-purple-400 font-mono",
+  statusContainer: "text-gray-400 text-sm max-w-md text-center",
 
   errorMessage: "text-red-400 text-sm max-w-md text-center",
   successMessage: "text-green-400 text-sm",

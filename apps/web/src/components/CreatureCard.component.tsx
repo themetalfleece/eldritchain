@@ -1,4 +1,5 @@
-import { Creature, getRarityBgColor, getRarityColor } from "@/data/creatures.data";
+import { Creature } from "@/data/creatures.data";
+import { getRarityBgColor, getRarityColor } from "@/data/creatures.styles";
 import { styles } from "./CreatureCard.styles";
 
 interface CreatureCardProps {

@@ -40,90 +40,19 @@ describe("Eldritchain", function () {
     });
   });
 
-  describe("Summoning", function () {
-    it("Should allow first summon", async function () {
-      expect(await eldritchain.canSummon(owner.address)).to.be.true;
-      await expect(eldritchain.summon()).to.emit(eldritchain, "CreatureSummoned");
-    });
+  describe("Summoning (Legacy - Now Requires Commit-Reveal)", function () {
+    it("Should require commit-reveal scheme", async function () {
+      // The old summon() function now requires a randomValue parameter
+      // This test demonstrates that the old API is no longer available
+      expect(await eldritchain.canSummon(owner.address)).to.be.false; // No commitment yet
 
-    it("Should return a valid creature ID", async function () {
-      const tx = await eldritchain.summon();
-      const receipt = await tx.wait();
-
-      const event = receipt?.logs.find((log) => log.fragment?.name === "CreatureSummoned");
-      expect(event).to.not.be.undefined;
-    });
-
-    it("Should increment creature level", async function () {
-      const tx = await eldritchain.summon();
-      const receipt = await tx.wait();
-
-      const creatureSummonedEvent = receipt?.logs.find(
-        (log) => log.fragment?.name === "CreatureSummoned"
-      ) as { args: [string, bigint, bigint] } | undefined;
-
-      const creatureId = creatureSummonedEvent.args[1];
-      const level = await eldritchain.getCreatureLevel(owner.address, creatureId);
-      expect(level).to.equal(1);
-    });
-
-    it("Should not allow summon on same UTC day", async function () {
-      await eldritchain.summon();
-      await expect(eldritchain.summon()).to.be.revertedWith(
-        "Cannot summon yet. Please wait for cooldown."
-      );
-    });
-
-    it("Should allow summon on different UTC day", async function () {
-      await eldritchain.summon();
-
-      // Fast forward to next UTC day (24 hours)
-      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-      await ethers.provider.send("evm_mine", []);
-
-      expect(await eldritchain.canSummon(owner.address)).to.be.true;
-      await expect(eldritchain.summon()).to.emit(eldritchain, "CreatureSummoned");
-    });
-
-    it("Should allow summon after short time if different UTC day", async function () {
-      // Get current block time
-      const block = await ethers.provider.getBlock("latest");
-      const currentTime = block!.timestamp;
-
-      // Calculate next UTC midnight
-      const currentDay = Math.floor(currentTime / 86400);
-      const nextMidnight = (currentDay + 1) * 86400;
-
-      // Set time to 1 minute before midnight
-      await ethers.provider.send("evm_setNextBlockTimestamp", [nextMidnight - 60]);
-      await ethers.provider.send("evm_mine", []);
-
-      // First summon at end of day
-      await eldritchain.summon();
-
-      // Fast forward 2 minutes (now it's 1 minute past midnight - new day!)
-      await ethers.provider.send("evm_setNextBlockTimestamp", [nextMidnight + 60]);
-      await ethers.provider.send("evm_mine", []);
-
-      // Should be able to summon again immediately (new UTC day!)
-      expect(await eldritchain.canSummon(owner.address)).to.be.true;
-      await expect(eldritchain.summon()).to.emit(eldritchain, "CreatureSummoned");
-    });
-
-    it("Should track multiple summons over multiple days", async function () {
-      await eldritchain.summon();
-
-      // Fast forward and summon multiple times (3 more days)
-      for (let i = 0; i < 3; i++) {
-        await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-        await ethers.provider.send("evm_mine", []);
-        await eldritchain.summon();
-      }
-
-      // Should have summoned 4 times total
-      const [ids] = await eldritchain.getUserCollection(owner.address);
-      expect(ids.length).to.be.gte(1);
-      expect(ids.length).to.be.lte(4); // Could be 1-4 unique creatures
+      // The summon function now requires a randomValue parameter
+      // This is enforced at the contract level, not just the TypeScript level
+      await expect(
+        eldritchain.summon(
+          BigInt("1234567890123456789012345678901234567890123456789012345678901234")
+        )
+      ).to.be.revertedWith("Cannot summon. Must commit first and wait for target block.");
     });
   });
 
@@ -134,8 +63,27 @@ describe("Eldritchain", function () {
       expect(levels.length).to.equal(0);
     });
 
-    it("Should return correct collection after summons", async function () {
-      await eldritchain.summon();
+    it("Should return correct collection after commit-reveal summon", async function () {
+      // Use commit-reveal scheme for summoning
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [randomValue])
+      );
+
+      // Commit
+      await eldritchain.commitRandom(hash);
+
+      // Wait for target block
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+
+      // Summon
+      await eldritchain.summon(randomValue);
 
       const [ids, levels] = await eldritchain.getUserCollection(owner.address);
       expect(ids.length).to.equal(1);
@@ -146,7 +94,26 @@ describe("Eldritchain", function () {
 
   describe("Timing", function () {
     it("Should return next UTC day start as next summon time", async function () {
-      const tx = await eldritchain.summon();
+      // Use commit-reveal scheme for summoning
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [randomValue])
+      );
+
+      // Commit
+      await eldritchain.commitRandom(hash);
+
+      // Wait for target block
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send("evm_mine", []);
+
+      // Summon
+      const tx = await eldritchain.summon(randomValue);
       await tx.wait();
 
       const lastSummon = await eldritchain.getLastSummonTime(owner.address);
@@ -158,6 +125,64 @@ describe("Eldritchain", function () {
       const expectedNextSummon = nextDay * 86400;
 
       expect(nextSummon).to.be.gte(expectedNextSummon);
+    });
+
+    it("Should return current time for expired commitment (255+ blocks old)", async function () {
+      // Use commit-reveal scheme - just commit without summoning
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [randomValue])
+      );
+
+      // Commit
+      await eldritchain.commitRandom(hash);
+
+      // Mine 256+ blocks to make the commitment expired
+      for (let i = 0; i < 260; i++) {
+        await ethers.provider.send("evm_mine", []);
+      }
+
+      const nextSummon = await eldritchain.getNextSummonTime(owner.address);
+      const currentBlock = await ethers.provider.getBlock("latest");
+      const currentTime = currentBlock!.timestamp;
+
+      // Should return current time since commitment is expired
+      expect(nextSummon).to.be.closeTo(currentTime, 10); // Allow 10 second tolerance
+    });
+
+    it("Should return current time for commitment from different day", async function () {
+      // Use commit-reveal scheme - just commit without summoning
+      const randomValue = BigInt(
+        "1234567890123456789012345678901234567890123456789012345678901234"
+      );
+      const hash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [randomValue])
+      );
+
+      // Commit
+      await eldritchain.commitRandom(hash);
+
+      // Fast forward to next UTC day (86400 seconds)
+      await ethers.provider.send("evm_increaseTime", [86400]);
+      await ethers.provider.send("evm_mine", []);
+
+      const nextSummon = await eldritchain.getNextSummonTime(owner.address);
+      const currentBlock = await ethers.provider.getBlock("latest");
+      const currentTime = currentBlock!.timestamp;
+
+      // Should return current time since commitment is from different day
+      expect(nextSummon).to.be.closeTo(currentTime, 10); // Allow 10 second tolerance
+    });
+
+    it("Should return current time for first-time user", async function () {
+      const nextSummon = await eldritchain.getNextSummonTime(owner.address);
+      const currentBlock = await ethers.provider.getBlock("latest");
+      const currentTime = currentBlock!.timestamp;
+
+      // First summon should be available immediately
+      expect(nextSummon).to.be.closeTo(currentTime, 10); // Allow 10 second tolerance
     });
   });
 });

@@ -32,10 +32,34 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   // Last summon timestamp per user
   mapping(address => uint256) public lastSummonTime;
 
+  // Commit-reveal scheme data
+  struct Commitment {
+    bytes32 hash; // Hash of the committed random value
+    uint256 commitTimestamp; // When the commit was made
+    uint256 targetBlockNumber; // Block number that's commitBlockDelay blocks ahead
+    bool isRevealed; // Whether the commitment has been revealed
+  }
+
+  mapping(address => Commitment) public commitments;
+
+  // Commit-reveal configuration
+  uint256 public commitBlockDelay; // Number of blocks to wait before revealing (default: 5)
+
   // Events
   event CreatureSummoned(address indexed summoner, uint16 indexed creatureId, uint16 level, uint256 timestamp);
 
   event CreaturesAdded(uint16 commonLast, uint16 rareLast, uint16 epicLast, uint16 deityLast);
+
+  event RandomCommitted(
+    address indexed user,
+    bytes32 indexed hash,
+    uint256 commitTimestamp,
+    uint256 targetBlockNumber
+  );
+
+  event RandomRevealed(address indexed user, uint256 randomValue, uint256 timestamp);
+
+  event CommitBlockDelayUpdated(uint256 oldDelay, uint256 newDelay);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -51,6 +75,9 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     rareLast = 1019; // 20 creatures (1000-1019)
     epicLast = 1511; // 12 creatures (1500-1511)
     deityLast = 1604; // 5 creatures (1600-1604)
+
+    // Set initial commit-reveal block delay
+    commitBlockDelay = 5;
   }
 
   // Helper: Get UTC day number from timestamp
@@ -95,29 +122,15 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     emit CreaturesAdded(_commonLast, _rareLast, _epicLast, _deityLast);
   }
 
-  function canSummon(address user) public view returns (bool) {
-    // First summon is always allowed
-    if (lastSummonTime[user] == 0) return true;
-
-    // Check if current day (UTC) is different from last summon day
-    return getCurrentDay(block.timestamp) > getCurrentDay(lastSummonTime[user]);
-  }
-
-  function getNextSummonTime(address user) public view returns (uint256) {
-    // First summon is always available
-    if (lastSummonTime[user] == 0) return block.timestamp;
-
-    // Calculate start of next UTC day
-    uint256 lastSummonDay = getCurrentDay(lastSummonTime[user]);
-    uint256 nextDay = lastSummonDay + 1;
-    uint256 nextDayStart = nextDay * 86400;
-
-    // If we're already past that, return current time
-    return nextDayStart > block.timestamp ? nextDayStart : block.timestamp;
-  }
-
-  function getLastSummonTime(address user) public view returns (uint256) {
-    return lastSummonTime[user];
+  // Set the commit-reveal block delay (owner only)
+  function setCommitBlockDelay(uint256 _newDelay) external onlyOwner {
+    require(_newDelay > 0, "Block delay must be greater than 0");
+    require(_newDelay <= 64, "Block delay cannot exceed 64 blocks");
+    
+    uint256 oldDelay = commitBlockDelay;
+    commitBlockDelay = _newDelay;
+    
+    emit CommitBlockDelayUpdated(oldDelay, _newDelay);
   }
 
   // Get user's collection across all namespaces
@@ -179,80 +192,178 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     return (creatureIds, levels);
   }
 
-  function summon() external returns (uint16) {
-    require(canSummon(msg.sender), "Cannot summon yet. Please wait for cooldown.");
+  function getNextSummonTime(address user) public view returns (uint256) {
+    // First summon is always available
+    if (lastSummonTime[user] == 0) return block.timestamp;
 
-    // Generate pseudo-random number
-    uint256 randomValue = uint256(
-      keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender, blockhash(block.number - 1)))
+    // If user has an expired commitment, they can commit again immediately
+    Commitment memory commitment = commitments[user];
+    if (commitment.hash != bytes32(0) && !isCommitmentValidForDay(user)) {
+      return block.timestamp;
+    }
+
+    // Calculate start of next UTC day
+    uint256 lastSummonDay = getCurrentDay(lastSummonTime[user]);
+    uint256 nextDay = lastSummonDay + 1;
+    uint256 nextDayStart = nextDay * 86400;
+
+    // If we're already past that, return current time
+    return nextDayStart > block.timestamp ? nextDayStart : block.timestamp;
+  }
+
+  function getLastSummonTime(address user) public view returns (uint256) {
+    return lastSummonTime[user];
+  }
+
+  function canCommit(address user) public view returns (bool) {
+    // Check if user is not on cooldown (has summoned today)
+    if (lastSummonTime[user] != 0) {
+      if (getCurrentDay(block.timestamp) <= getCurrentDay(lastSummonTime[user])) {
+        return false;
+      }
+    }
+
+    // Check if user already has a commitment for today
+    Commitment memory commitment = commitments[user];
+
+    // No commitment, can commit
+    if (commitment.hash == bytes32(0)) return true;
+
+    // Commitment from different day, can commit
+    if (getCurrentDay(block.timestamp) != getCurrentDay(commitment.commitTimestamp)) {
+      return true;
+    }
+
+    // Commitment is expired (255+ blocks old), can commit
+    if (!isCommitmentValidForDay(user)) {
+      return true;
+    }
+
+    // Already committed today and commitment is still valid, can't commit
+    return false;
+  }
+
+  // Commit a random value for the commit-reveal scheme
+  function commitRandom(bytes32 hash) external {
+    require(
+      canCommit(msg.sender),
+      "Cannot commit. Please wait for cooldown or complete current commitment."
+    );
+
+    // Prevent zero hash commitments (security measure)
+    require(hash != bytes32(0), "Cannot commit zero hash");
+
+    // Store the commitment with target block commitBlockDelay blocks ahead
+    commitments[msg.sender] = Commitment({
+      hash: hash,
+      commitTimestamp: block.timestamp,
+      targetBlockNumber: block.number + commitBlockDelay,
+      isRevealed: false
+    });
+
+    emit RandomCommitted(msg.sender, hash, block.timestamp, block.number + commitBlockDelay);
+  }
+
+  // Get commitment details for a user
+  function getCommitment(address user) public view returns (Commitment memory) {
+    return commitments[user];
+  }
+
+  function canSummon(address user) public view returns (bool) {
+    Commitment memory commitment = commitments[user];
+
+    // Must not already be revealed
+    if (commitment.isRevealed) return false;
+
+    // Check if commitment is valid for the day (includes existence, same day, and 255 block check)
+    if (!isCommitmentValidForDay(user)) return false;
+
+    // Target block must be available (block.number >= targetBlockNumber)
+    if (block.number < commitment.targetBlockNumber) return false;
+
+    return true;
+  }
+
+  // Check if a commitment is valid for the current day (not expired)
+  function isCommitmentValidForDay(address user) public view returns (bool) {
+    Commitment memory commitment = commitments[user];
+
+    // Must have a commitment
+    if (commitment.hash == bytes32(0)) return false;
+
+    // Must be within the same day as commit
+    if (getCurrentDay(block.timestamp) != getCurrentDay(commitment.commitTimestamp)) return false;
+
+    // Target block must not be more than 256 blocks ago (blockhash limitation)
+    // Only check this if the target block has been mined
+    if (block.number >= commitment.targetBlockNumber) {
+      if (block.number - commitment.targetBlockNumber > 255) return false;
+    }
+
+    return true;
+  }
+
+  function summon(uint256 randomValue) external returns (uint16) {
+    // Check if user can summon (has valid commitment and timing)
+    require(canSummon(msg.sender), "Cannot summon. Must commit first and wait for target block.");
+
+    Commitment storage commitment = commitments[msg.sender];
+
+    // Verify the revealed random value matches the committed hash
+    bytes32 computedHash = keccak256(abi.encodePacked(randomValue));
+    require(computedHash == commitment.hash, "Invalid random value. Must match committed hash.");
+
+    // Mark commitment as revealed
+    commitment.isRevealed = true;
+
+    // Generate final random value using committed value, target block hash, and prevrandao
+    bytes32 targetBlockHash = blockhash(commitment.targetBlockNumber);
+    uint256 finalRandom = uint256(
+      keccak256(
+        abi.encodePacked(
+          randomValue,
+          targetBlockHash,
+          block.prevrandao,
+          msg.sender,
+          block.timestamp
+        )
+      )
     );
 
     // Determine rarity tier (use basis points: 10000 = 100%)
-    uint256 rarityRoll = randomValue % 10000;
+    uint256 rarityRoll = finalRandom % 10000;
     uint16 creatureId;
 
-    // Gas normalization: Execute all paths to ensure consistent gas usage
-    // This prevents attackers from predicting rarity based on gas estimation
-
-    // Calculate all possible creature IDs (but only use the correct one)
-    uint16 deityId = 0;
-    uint16 epicId = 0;
-    uint16 rareId = 0;
-    uint16 commonId = 0;
-
-    // Deity path (0.5%)
-    {
+    // Simplified rarity selection with fresh randomness for each tier
+    if (rarityRoll < 50) {
+      // Deity (0.5%)
       uint16 range = deityCount();
       require(range > 0, "No deity creatures available");
-      uint256 deityRandom = uint256(keccak256(abi.encodePacked(randomValue, "deity")));
+      uint256 deityRandom = uint256(keccak256(abi.encodePacked(finalRandom, "deity")));
       uint16 index = uint16(deityRandom % range);
-      deityId = DEITY_BASE + index;
-    }
-
-    // Epic path (4.5%)
-    {
+      creatureId = DEITY_BASE + index;
+    } else if (rarityRoll < 500) {
+      // Epic (4.5%)
       uint16 range = epicCount();
       require(range > 0, "No epic creatures available");
-      uint256 epicRandom = uint256(keccak256(abi.encodePacked(randomValue, "epic")));
+      uint256 epicRandom = uint256(keccak256(abi.encodePacked(finalRandom, "epic")));
       uint16 index = uint16(epicRandom % range);
-      epicId = EPIC_BASE + index;
-    }
-
-    // Rare path (25%)
-    {
+      creatureId = EPIC_BASE + index;
+    } else if (rarityRoll < 3000) {
+      // Rare (25%)
       uint16 range = rareCount();
       require(range > 0, "No rare creatures available");
-      uint256 rareRandom = uint256(keccak256(abi.encodePacked(randomValue, "rare")));
+      uint256 rareRandom = uint256(keccak256(abi.encodePacked(finalRandom, "rare")));
       uint16 index = uint16(rareRandom % range);
-      rareId = RARE_BASE + index;
-    }
-
-    // Common path (70%)
-    {
+      creatureId = RARE_BASE + index;
+    } else {
+      // Common (70%)
       uint16 range = commonCount();
       require(range > 0, "No common creatures available");
-      uint256 commonRandom = uint256(keccak256(abi.encodePacked(randomValue, "common")));
+      uint256 commonRandom = uint256(keccak256(abi.encodePacked(finalRandom, "common")));
       uint16 index = uint16(commonRandom % range);
-      commonId = COMMON_BASE + index;
+      creatureId = COMMON_BASE + index;
     }
-
-    // Select the correct creature ID based on rarity roll
-    // Use a lookup approach to ensure completely uniform gas usage
-    // All operations execute regardless of outcome
-    uint16[4] memory creatureIds = [deityId, epicId, rareId, commonId];
-    uint16[4] memory conditions = [
-      uint16(rarityRoll < 50 ? 1 : 0),
-      uint16(rarityRoll >= 50 && rarityRoll < 500 ? 1 : 0),
-      uint16(rarityRoll >= 500 && rarityRoll < 3000 ? 1 : 0),
-      uint16(rarityRoll >= 3000 ? 1 : 0)
-    ];
-
-    // Calculate weighted sum (only one condition will be 1, others 0)
-    creatureId =
-      creatureIds[0] * conditions[0] +
-      creatureIds[1] * conditions[1] +
-      creatureIds[2] * conditions[2] +
-      creatureIds[3] * conditions[3];
 
     // Increment creature level
     userCreatures[msg.sender][creatureId]++;
