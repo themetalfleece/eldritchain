@@ -80,7 +80,7 @@ export function getCreatureCountByRarity(): Record<Rarity, number> {
 
 // Convert contract collection data to creature collection object
 export function convertCollectionData(
-  collectionData: [bigint[], bigint[]] | undefined
+  collectionData: readonly [readonly number[], readonly number[]] | undefined
 ): Record<number, number> {
   if (!collectionData) {
     return {};
@@ -98,7 +98,7 @@ export function convertCollectionData(
 
 // Count owned creatures by rarity from collection data
 export function getOwnedCountsByRarity(
-  collectionData: [bigint[], bigint[]] | undefined
+  collectionData: readonly [readonly number[], readonly number[]] | undefined
 ): Record<Rarity, number> {
   if (!collectionData) {
     return { common: 0, rare: 0, epic: 0, deity: 0 };
@@ -123,7 +123,9 @@ export function getOwnedCountsByRarity(
 }
 
 // Calculate wallet level from collection data
-export function calculateWalletLevelFromData(collectionData: [bigint[], bigint[]] | undefined) {
+export function calculateWalletLevelFromData(
+  collectionData: readonly [readonly number[], readonly number[]] | undefined
+) {
   const creatureCollection = convertCollectionData(collectionData);
   return calculateWalletLevel(creatureCollection);
 }
