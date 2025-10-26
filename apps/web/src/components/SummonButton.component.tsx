@@ -37,6 +37,7 @@ export function SummonButton() {
     isSummonConfirming,
     isSummonSuccess,
     summonError,
+    summonHash,
   } = useSummonActions({
     commitmentData,
     setCommitmentData,
@@ -52,6 +53,8 @@ export function SummonButton() {
 
   useSummonEvents({
     setSummonedCreature,
+    summonHash,
+    isSummonSuccess,
   });
 
   const { getButtonText, buttonDisabled } = useSummonButtonText({

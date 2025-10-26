@@ -288,55 +288,67 @@ export function useSummonActions({
     isSummonSuccess,
     summonError,
     summonReceipt,
+    summonHash,
   };
 }
 
 // Hook for handling successful transactions and event processing
 export function useSummonEvents({
   setSummonedCreature,
+  summonHash,
+  isSummonSuccess,
 }: {
   setSummonedCreature?: (creature: { id: number; name: string; rarity: Rarity } | null) => void;
+  summonHash?: `0x${string}`;
+  isSummonSuccess?: boolean;
 }) {
   const { address } = useAccount();
-  const { data: hash, isSuccess: isCommitSuccess } = useWriteContract();
-  const { data: commitReceipt } = useWaitForTransactionReceipt({ hash });
+  const { data: summonReceipt } = useWaitForTransactionReceipt({
+    hash: summonHash,
+    query: {
+      enabled: !!summonHash,
+    },
+  });
 
   useEffect(() => {
-    if (isCommitSuccess && commitReceipt) {
-      const logs = commitReceipt.logs.filter(
-        (log) => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
-      );
+    if (!isSummonSuccess || !summonReceipt) {
+      return;
+    }
 
-      // Handle CreatureSummoned event
-      const summonLog = logs.find(
-        (log) => log.topics[0] === "0x" + "CreatureSummoned".padEnd(64, "0") // Event signature
-      );
+    const logs = summonReceipt.logs.filter(
+      (log) => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
+    );
 
-      if (summonLog && summonLog.topics.length >= 3) {
-        const creatureIdHex = summonLog.topics[2];
-        if (creatureIdHex) {
-          const creatureId = parseInt(creatureIdHex, 16);
+    // Handle CreatureSummoned event
+    // Event signature: CreatureSummoned(address indexed summoner, uint16 indexed creatureId, uint16 level, uint256 timestamp)
+    // Look for logs with 4 topics (event signature + 3 indexed parameters)
+    const summonLog = logs.find((log) => log.topics.length === 4);
 
-          import("@/data/creatures.data").then(({ getCreature }) => {
-            const creature = getCreature(creatureId);
+    if (summonLog && summonLog.topics.length >= 3) {
+      const creatureIdHex = summonLog.topics[2];
 
-            if (creature) {
-              setSummonedCreature?.({
-                id: creatureId,
-                name: creature.name,
-                rarity: creature.rarity,
-              });
-            }
-          });
+      if (creatureIdHex) {
+        const creatureId = parseInt(creatureIdHex, 16);
 
-          // Clear commitment data after successful summon
-          if (address) {
-            clearCommitmentData(address);
+        import("@/data/creatures.data").then(({ getCreature }) => {
+          const creature = getCreature(creatureId);
+
+          if (creature) {
+            setSummonedCreature?.({
+              id: creatureId,
+              name: creature.name,
+              rarity: creature.rarity,
+            });
           }
+        });
+
+        // Clear commitment data after successful summon
+        if (address) {
+          clearCommitmentData(address);
         }
       }
     }
-  }, [isCommitSuccess, commitReceipt, address, setSummonedCreature]);
+  }, [isSummonSuccess, summonReceipt, address, setSummonedCreature]);
 }
 
 // Hook for managing summon status and timing
