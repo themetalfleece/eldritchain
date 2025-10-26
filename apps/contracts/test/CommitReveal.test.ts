@@ -357,18 +357,18 @@ describe("Eldritchain Commit-Reveal", function () {
 
       // Extract creature IDs from events
       const event1 = receipt1?.logs.find(
-        (log) => (log as any).fragment?.name === "CreatureSummoned"
+        (log) => log.topics[0] === eldritchain.interface.getEvent("CreatureSummoned").topicHash
       );
       const event2 = receipt2?.logs.find(
-        (log) => (log as any).fragment?.name === "CreatureSummoned"
+        (log) => log.topics[0] === eldritchain.interface.getEvent("CreatureSummoned").topicHash
       );
 
       expect(event1).to.not.be.undefined;
       expect(event2).to.not.be.undefined;
 
       // Results should be different (very high probability)
-      const creatureId1 = (event1 as any).args[1];
-      const creatureId2 = (event2 as any).args[1];
+      const creatureId1 = BigInt(event1!.topics[2]);
+      const creatureId2 = BigInt(event2!.topics[2]);
 
       // Note: This test could theoretically fail if both users get the same creature,
       // but the probability is extremely low given the randomness sources
@@ -399,8 +399,11 @@ describe("Eldritchain Commit-Reveal", function () {
       const receipt = await tx.wait();
 
       // Should succeed and emit event
-      expect(receipt?.logs.find((log) => (log as any).fragment?.name === "CreatureSummoned")).to.not
-        .be.undefined;
+      expect(
+        receipt?.logs.find(
+          (log) => log.topics[0] === eldritchain.interface.getEvent("CreatureSummoned").topicHash
+        )
+      ).to.not.be.undefined;
 
       // The target block should be the one we committed to
       expect(targetBlock?.number).to.equal(Number(targetBlockNumber));
@@ -656,14 +659,17 @@ describe("Eldritchain Commit-Reveal", function () {
 
       // Extract creature IDs
       const event1 = receipt1?.logs.find(
-        (log) => (log as any).fragment?.name === "CreatureSummoned"
+        (log) => log.topics[0] === eldritchain.interface.getEvent("CreatureSummoned").topicHash
       );
       const event2 = receipt2?.logs.find(
-        (log) => (log as any).fragment?.name === "CreatureSummoned"
+        (log) => log.topics[0] === eldritchain.interface.getEvent("CreatureSummoned").topicHash
       );
 
-      const creatureId1 = (event1 as any).args[1];
-      const creatureId2 = (event2 as any).args[1];
+      expect(event1).to.not.be.undefined;
+      expect(event2).to.not.be.undefined;
+
+      const creatureId1 = BigInt(event1!.topics[2]);
+      const creatureId2 = BigInt(event2!.topics[2]);
 
       // Results should be different due to different block contexts
       expect(creatureId1).to.not.equal(creatureId2);

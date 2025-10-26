@@ -50,12 +50,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
   event CreaturesAdded(uint16 commonLast, uint16 rareLast, uint16 epicLast, uint16 deityLast);
 
-  event RandomCommitted(
-    address indexed user,
-    bytes32 indexed hash,
-    uint256 commitTimestamp,
-    uint256 targetBlockNumber
-  );
+  event RandomCommitted(address indexed user, bytes32 indexed hash, uint256 commitTimestamp, uint256 targetBlockNumber);
 
   event RandomRevealed(address indexed user, uint256 randomValue, uint256 timestamp);
 
@@ -126,10 +121,10 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
   function setCommitBlockDelay(uint256 _newDelay) external onlyOwner {
     require(_newDelay > 0, "Block delay must be greater than 0");
     require(_newDelay <= 64, "Block delay cannot exceed 64 blocks");
-    
+
     uint256 oldDelay = commitBlockDelay;
     commitBlockDelay = _newDelay;
-    
+
     emit CommitBlockDelayUpdated(oldDelay, _newDelay);
   }
 
@@ -245,10 +240,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
   // Commit a random value for the commit-reveal scheme
   function commitRandom(bytes32 hash) external {
-    require(
-      canCommit(msg.sender),
-      "Cannot commit. Please wait for cooldown or complete current commitment."
-    );
+    require(canCommit(msg.sender), "Cannot commit. Please wait for cooldown or complete current commitment.");
 
     // Prevent zero hash commitments (security measure)
     require(hash != bytes32(0), "Cannot commit zero hash");
@@ -319,15 +311,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     // Generate final random value using committed value, target block hash, and prevrandao
     bytes32 targetBlockHash = blockhash(commitment.targetBlockNumber);
     uint256 finalRandom = uint256(
-      keccak256(
-        abi.encodePacked(
-          randomValue,
-          targetBlockHash,
-          block.prevrandao,
-          msg.sender,
-          block.timestamp
-        )
-      )
+      keccak256(abi.encodePacked(randomValue, targetBlockHash, block.prevrandao, msg.sender, block.timestamp))
     );
 
     // Determine rarity tier (use basis points: 10000 = 100%)

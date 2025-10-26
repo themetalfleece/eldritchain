@@ -13,17 +13,19 @@ This script initializes a MongoDB replica set to enable transaction support for 
 https://rufatmammadli.medium.com/how-to-deploy-mongodb-replica-set-on-coolify-3e4bf06cecd0
 
 Custom MongoDB Configuration:
+
 ```yml
 replication:
- replSetName: "rs0"
+  replSetName: "rs0"
 security:
   authorization: enabled
   keyFile: /tmp/keyfile-mongo/keyfile-mongo-0
-  ```
+```
 
 ## Quick Start
 
 ### Using .env file (Recommended)
+
 ```bash
 # Create .env file with your MongoDB connection URI
 echo "MONGODB_URI=mongodb://your-username:your-password@your-host:27017/admin" >> .env
@@ -33,6 +35,7 @@ node scripts/init-replica-set.js
 ```
 
 ### Using environment variables
+
 ```bash
 # For local development
 node scripts/init-replica-set.js
@@ -51,17 +54,20 @@ You can customize the connection using these environment variables:
 ## Examples
 
 ### Local Development
+
 ```bash
 # Default settings (localhost:27017)
 node scripts/init-replica-set.js
 ```
 
 ### Docker Environment
+
 ```bash
 MONGODB_URI=mongodb://mongodb:27017/admin node scripts/init-replica-set.js
 ```
 
 ### Using .env file
+
 ```bash
 # Create .env file
 cat > .env << EOF
@@ -105,15 +111,15 @@ After running the script, you can verify the replica set is working:
 
 ```javascript
 // Connect to MongoDB
-mongosh
+mongosh;
 
 // Check replica set status
-rs.status()
+rs.status();
 
 // Test transaction support
-const session = db.getMongo().startSession()
-session.endSession()
-console.log("Transactions supported!")
+const session = db.getMongo().startSession();
+session.endSession();
+console.log("Transactions supported!");
 ```
 
 ## Next Steps

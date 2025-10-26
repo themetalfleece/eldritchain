@@ -101,6 +101,7 @@ For better reliability or development purposes, you can override the default RPC
 - **Alchemy/Infura**: `NEXT_PUBLIC_RPC_URL=https://polygon-amoy.g.alchemy.com/v2/your-api-key`
 
 This is particularly useful when:
+
 - Testing with local Hardhat network
 - Using a more reliable RPC provider
 - Avoiding rate limits on public RPC endpoints
