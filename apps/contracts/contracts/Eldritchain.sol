@@ -191,9 +191,7 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     // First summon is always available
     if (lastSummonTime[user] == 0) return block.timestamp;
 
-    // If user has an expired commitment, they can commit again immediately
-    Commitment memory commitment = commitments[user];
-    if (commitment.hash != bytes32(0) && !isCommitmentValidForDay(user)) {
+    if (canCommit(user)) {
       return block.timestamp;
     }
 

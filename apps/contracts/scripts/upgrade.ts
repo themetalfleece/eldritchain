@@ -1,6 +1,6 @@
 import { assertEnv, type NetworkName } from "@eldritchain/common";
 import * as dotenv from "dotenv";
-import { ethers, upgrades } from "hardhat";
+import hre, { ethers, upgrades } from "hardhat";
 
 dotenv.config();
 
@@ -9,7 +9,7 @@ async function main() {
   assertEnv(process.env.PRIVATE_KEY, "PRIVATE_KEY");
   const proxyAddress = assertEnv(process.env.PROXY_ADDRESS, "PROXY_ADDRESS") as `0x${string}`;
 
-  const network = (process.env.NETWORK || "polygonAmoy") as NetworkName;
+  const network = (hre.network.name || "polygonAmoy") as NetworkName;
   console.log(`Upgrading Eldritchain at ${proxyAddress} on ${network}...`);
 
   const EldritchainV2 = await ethers.getContractFactory("Eldritchain");

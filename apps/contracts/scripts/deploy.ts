@@ -1,6 +1,6 @@
 import { assertEnv, type NetworkName } from "@eldritchain/common";
 import * as dotenv from "dotenv";
-import { ethers, upgrades } from "hardhat";
+import hre, { ethers, upgrades } from "hardhat";
 
 dotenv.config();
 
@@ -8,7 +8,7 @@ async function main() {
   // Validate required env vars for deployment
   assertEnv(process.env.PRIVATE_KEY, "PRIVATE_KEY");
 
-  const network = (process.env.NETWORK || "polygonAmoy") as NetworkName;
+  const network = (hre.network.name || "polygonAmoy") as NetworkName;
   console.log(`Deploying Eldritchain to ${network}...`);
 
   const Eldritchain = await ethers.getContractFactory("Eldritchain");
