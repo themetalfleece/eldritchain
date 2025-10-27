@@ -321,8 +321,9 @@ export function useSummonEvents({
 
     // Handle CreatureSummoned event
     // Event signature: CreatureSummoned(address indexed summoner, uint16 indexed creatureId, uint16 level, uint256 timestamp)
-    // Look for logs with 4 topics (event signature + 3 indexed parameters)
-    const summonLog = logs.find((log) => log.topics.length === 4);
+    // Event signature hash: 0x3afcdbce1e3b42d6685e2020ee7c099a88f43cdb3a5b7de414ebe16c959df338
+    const eventSignature = "0x3afcdbce1e3b42d6685e2020ee7c099a88f43cdb3a5b7de414ebe16c959df338";
+    const summonLog = logs.find((log) => log.topics[0] === eventSignature);
 
     if (summonLog && summonLog.topics.length >= 3) {
       const creatureIdHex = summonLog.topics[2];
@@ -330,17 +331,21 @@ export function useSummonEvents({
       if (creatureIdHex) {
         const creatureId = parseInt(creatureIdHex, 16);
 
-        import("@/data/creatures.data").then(({ getCreature }) => {
-          const creature = getCreature(creatureId);
+        import("@/data/creatures.data")
+          .then(({ getCreature }) => {
+            const creature = getCreature(creatureId);
 
-          if (creature) {
-            setSummonedCreature?.({
-              id: creatureId,
-              name: creature.name,
-              rarity: creature.rarity,
-            });
-          }
-        });
+            if (creature) {
+              setSummonedCreature?.({
+                id: creatureId,
+                name: creature.name,
+                rarity: creature.rarity,
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading creature data:", error);
+          });
 
         // Clear commitment data after successful summon
         if (address) {
