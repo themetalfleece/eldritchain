@@ -69,6 +69,7 @@ COPY --from=builder /app/packages/common/dist ./packages/common/dist
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/next.config.mjs ./apps/web/next.config.mjs
 COPY --from=builder /app/apps/web/postcss.config.mjs ./apps/web/postcss.config.mjs
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 # Expose Next.js port
 EXPOSE 3000
