@@ -48,6 +48,8 @@ export function useSummonPhase({
   const [commitmentData, setCommitmentData] = useState<CommitmentData | null>(null);
   const [phase, setPhase] = useState<SummonPhase>("cooldown_active");
 
+  useResetOnWalletChange(() => setPhase("cooldown_active"));
+
   const canCommitEnabled = !!address && phase !== "creature_summoned";
   const { data: canCommit } = useReadContract({
     address: CONTRACT_ADDRESS,
