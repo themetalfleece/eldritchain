@@ -299,11 +299,9 @@ contract Eldritchain is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     // Mark commitment as revealed
     commitment.isRevealed = true;
 
-    // Generate final random value using committed value, target block hash, and prevrandao
+    // Generate final random value using committed value, target block hash, and sender address (deterministic values)
     bytes32 targetBlockHash = blockhash(commitment.targetBlockNumber);
-    uint256 finalRandom = uint256(
-      keccak256(abi.encodePacked(randomValue, targetBlockHash, block.prevrandao, msg.sender, block.timestamp))
-    );
+    uint256 finalRandom = uint256(keccak256(abi.encodePacked(randomValue, targetBlockHash, msg.sender)));
 
     // Determine rarity tier (use basis points: 10000 = 100%)
     uint256 rarityRoll = finalRandom % 10000;
