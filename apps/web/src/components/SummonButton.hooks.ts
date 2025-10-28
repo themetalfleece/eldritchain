@@ -1,4 +1,5 @@
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/config/contract.config";
+import { networkConfig } from "@/config/wagmi.config";
 import { Rarity } from "@/data/creatures.data";
 import {
   clearCommitmentData,
@@ -9,11 +10,13 @@ import {
   type CommitmentData,
   type ContractCommitment,
 } from "@/lib/commit-reveal.utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
   useBlockNumber,
+  useChainId,
   useReadContract,
+  useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
@@ -46,7 +49,6 @@ export function useSummonPhase({
   const [commitmentData, setCommitmentData] = useState<CommitmentData | null>(null);
   const [phase, setPhase] = useState<SummonPhase>("cooldown_active");
 
-  // get last summon time
   const canCommitEnabled = !!address && phase !== "creature_summoned";
   const { data: canCommit } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -209,6 +211,11 @@ export function useSummonActions({
   setCommitmentData: (data: CommitmentData | null) => void;
 }) {
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
+
+  // Get the expected chain ID from the network config
+  const expectedChainId = networkConfig.chain.id;
 
   // Commit transaction state
   const {
@@ -216,6 +223,7 @@ export function useSummonActions({
     data: commitHash,
     isPending: isCommitPending,
     error: commitError,
+    reset: resetCommitState,
   } = useWriteContract();
 
   const {
@@ -232,6 +240,7 @@ export function useSummonActions({
     data: summonHash,
     isPending: isSummonPending,
     error: summonError,
+    reset: resetSummonState,
   } = useWriteContract();
 
   const {
@@ -242,7 +251,12 @@ export function useSummonActions({
     hash: summonHash,
   });
 
-  const handleCommit = () => {
+  // Reset transaction state when wallet changes
+  useResetOnWalletChange(resetCommitState);
+  useResetOnWalletChange(resetSummonState);
+
+  // Execute commit action
+  const executeCommit = () => {
     if (!address) {
       return;
     }
@@ -260,7 +274,8 @@ export function useSummonActions({
     });
   };
 
-  const handleSummon = () => {
+  // Execute summon action
+  const executeSummon = () => {
     if (!commitmentData) {
       return;
     }
@@ -271,6 +286,40 @@ export function useSummonActions({
       functionName: "summon",
       args: [commitmentData.randomValue],
     });
+  };
+
+  const handleCommit = async () => {
+    if (!address) {
+      return;
+    }
+
+    // Check if user is on the correct network
+    if (chainId !== expectedChainId) {
+      try {
+        await switchChain({ chainId: expectedChainId });
+      } catch (error) {
+        console.error("Failed to switch network:", error);
+      }
+    }
+
+    executeCommit();
+  };
+
+  const handleSummon = async () => {
+    if (!commitmentData) {
+      return;
+    }
+
+    // Check if user is on the correct network
+    if (chainId !== expectedChainId) {
+      try {
+        await switchChain({ chainId: expectedChainId });
+      } catch (error) {
+        console.error("Failed to switch network:", error);
+      }
+    }
+
+    executeSummon();
   };
 
   return {
@@ -287,6 +336,7 @@ export function useSummonActions({
     summonError,
     summonReceipt,
     summonHash,
+    isSwitchingChain,
   };
 }
 
@@ -296,7 +346,7 @@ export function useSummonEvents({
   summonHash,
   isSummonSuccess,
 }: {
-  setSummonedCreature?: (creature: { id: number; name: string; rarity: Rarity } | null) => void;
+  setSummonedCreature: (creature: { id: number; name: string; rarity: Rarity } | null) => void;
   summonHash?: `0x${string}`;
   isSummonSuccess?: boolean;
 }) {
@@ -334,7 +384,7 @@ export function useSummonEvents({
             const creature = getCreature(creatureId);
 
             if (creature) {
-              setSummonedCreature?.({
+              setSummonedCreature({
                 id: creatureId,
                 name: creature.name,
                 rarity: creature.rarity,
@@ -381,6 +431,7 @@ export function useSummonButtonText({
   isSummonPending,
   isSummonConfirming,
   isSummonSuccess,
+  isSwitchingChain,
 }: {
   phase: SummonPhase;
   isCommitPending: boolean;
@@ -389,8 +440,12 @@ export function useSummonButtonText({
   isSummonPending: boolean;
   isSummonConfirming: boolean;
   isSummonSuccess: boolean;
+  isSwitchingChain?: boolean;
 }) {
   const getButtonText = () => {
+    if (isSwitchingChain) {
+      return "Switching Network...";
+    }
     if (isCommitPending || isSummonPending) {
       return "Confirm in Wallet...";
     }
@@ -440,6 +495,7 @@ export function useSummonButtonText({
 
   const getButtonDisabled = () => {
     return (
+      isSwitchingChain ||
       isCommitPending ||
       isCommitConfirming ||
       isSummonPending ||
@@ -583,4 +639,21 @@ export function useSummonAutoActions({
       setHasAutoSummoned(true);
     }
   }, [phase, handleSummon, hasAutoSummoned, commitmentData]);
+}
+
+// Reusable hook for resetting state when wallet changes
+export function useResetOnWalletChange(resetCallback: () => void) {
+  const { address } = useAccount();
+  const previousAddress = useRef<string | undefined>(address);
+
+  useEffect(() => {
+    // Check if address has changed (not just initialized)
+    if (previousAddress.current !== undefined && previousAddress.current !== address) {
+      // Wallet has changed - run the reset callback
+      resetCallback();
+    }
+
+    // Update the previous address reference
+    previousAddress.current = address;
+  }, [address, resetCallback]);
 }

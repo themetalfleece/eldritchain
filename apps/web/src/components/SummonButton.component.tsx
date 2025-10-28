@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import {
+  useResetOnWalletChange,
   useSummonActions,
   useSummonAutoActions,
   useSummonButtonText,
@@ -23,6 +24,7 @@ export function SummonButton() {
     name: string;
     rarity: Rarity;
   } | null>(null);
+  useResetOnWalletChange(() => setSummonedCreature(null));
 
   const [commitmentData, setCommitmentData] = useState<CommitmentData | null>(null);
 
@@ -38,6 +40,7 @@ export function SummonButton() {
     isSummonSuccess,
     summonError,
     summonHash,
+    isSwitchingChain,
   } = useSummonActions({
     commitmentData,
     setCommitmentData,
@@ -65,6 +68,7 @@ export function SummonButton() {
     isSummonPending,
     isSummonConfirming,
     isSummonSuccess,
+    isSwitchingChain,
   });
 
   const { getStatusMessage } = useSummonStatusMessage({
@@ -79,6 +83,8 @@ export function SummonButton() {
     handleSummon,
     commitmentData,
   });
+
+  // Reset state when wallet changes
 
   const handleButtonClick = () => {
     if (phase === "commit_available") {
