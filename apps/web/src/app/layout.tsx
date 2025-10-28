@@ -7,6 +7,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Eldritchain - Daily Creature Summoning",
   description: "Summon eldritch creatures once per day on the blockchain",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
