@@ -23,6 +23,7 @@ export const config = getDefaultConfig({
   projectId: env.walletConnectProjectId,
   chains: [customChain],
   ssr: true,
+  appDescription: "Summon creatures once per day on-chain",
 });
 
 export { networkConfig };
