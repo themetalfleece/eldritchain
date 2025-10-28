@@ -14,7 +14,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
   useBlockNumber,
-  useChainId,
   useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
@@ -211,11 +210,10 @@ export function useSummonActions({
   setCommitmentData: (data: CommitmentData | null) => void;
 }) {
   const { address } = useAccount();
-  const chainId = useChainId();
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
 
-  // Get the expected chain ID from the network config
-  const expectedChainId = networkConfig.chain.id;
+  // Get the chain ID from the network config
+  const chainId = networkConfig.chain.id;
 
   // Commit transaction state
   const {
@@ -293,13 +291,10 @@ export function useSummonActions({
       return;
     }
 
-    // Check if user is on the correct network
-    if (chainId !== expectedChainId) {
-      try {
-        await switchChain({ chainId: expectedChainId });
-      } catch (error) {
-        console.error("Failed to switch network:", error);
-      }
+    try {
+      await switchChain({ chainId });
+    } catch (error) {
+      console.error("Failed to switch network:", error);
     }
 
     executeCommit();
@@ -310,13 +305,10 @@ export function useSummonActions({
       return;
     }
 
-    // Check if user is on the correct network
-    if (chainId !== expectedChainId) {
-      try {
-        await switchChain({ chainId: expectedChainId });
-      } catch (error) {
-        console.error("Failed to switch network:", error);
-      }
+    try {
+      await switchChain({ chainId });
+    } catch (error) {
+      console.error("Failed to switch network:", error);
     }
 
     executeSummon();
