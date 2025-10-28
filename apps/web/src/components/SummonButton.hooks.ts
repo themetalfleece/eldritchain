@@ -46,47 +46,58 @@ export function useSummonPhase({
   const [commitmentData, setCommitmentData] = useState<CommitmentData | null>(null);
   const [phase, setPhase] = useState<SummonPhase>("cooldown_active");
 
+  // get last summon time
+  const canCommitEnabled = !!address && phase !== "creature_summoned";
   const { data: canCommit } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: "canCommit",
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
-      refetchInterval: 10000,
+      enabled: canCommitEnabled,
+      refetchInterval: 1700,
     },
   });
 
+  const canSummonEnabled =
+    !!address && phase !== "creature_summoned" && phase !== "cooldown_active";
   const { data: canSummon } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: "canSummon",
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
-      refetchInterval: 10000,
+      enabled: canSummonEnabled,
+      refetchInterval: 1700,
     },
   });
 
-  const { data: isCommitmentValid } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: "isCommitmentValidForDay",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-      refetchInterval: 10000,
-    },
-  });
-
+  const getCommitmentEnabled = !!address && phase !== "creature_summoned";
   const { data: contractCommitment } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: "getCommitment",
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
-      refetchInterval: 10000,
+      enabled: getCommitmentEnabled,
+      refetchInterval: 1700,
+    },
+  });
+
+  const hasCommitment =
+    contractCommitment &&
+    contractCommitment.hash !==
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+  const isCommitmentValidEnabled = !!address && hasCommitment && phase === "committing";
+  const { data: isCommitmentValid } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: "isCommitmentValidForDay",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isCommitmentValidEnabled,
+      refetchInterval: 1700,
     },
   });
 
@@ -108,22 +119,22 @@ export function useSummonPhase({
   }, [isConnected]);
 
   useEffect(() => {
-    if (
-      !address ||
-      !contractCommitment ||
-      !currentBlockNumber ||
-      canCommit === undefined ||
-      canSummon === undefined ||
-      isCommitmentValid === undefined
-    ) {
+    if (!address || !contractCommitment || !currentBlockNumber || canCommit === undefined) {
       return;
     }
 
-    const hasCommitment =
-      contractCommitment.hash !==
-      "0x0000000000000000000000000000000000000000000000000000000000000000";
+    // Check if creature was just summoned - highest priority
+    if (summonedCreature) {
+      setPhase("creature_summoned");
+      return;
+    }
 
-    // Handle transaction states first
+    // Can summon (has valid commitment and target block is ready)
+    if (canSummon) {
+      setPhase("summon_available");
+      return;
+    }
+
     if (isCommitPending || isCommitConfirming) {
       setPhase("committing");
       return;
@@ -134,40 +145,26 @@ export function useSummonPhase({
       return;
     }
 
-    // Check if creature was just summoned - highest priority
-    if (summonedCreature) {
-      setPhase("creature_summoned");
+    // Has commitment but can't summon yet - check if commitment is still valid
+    if (hasCommitment && !contractCommitment.isRevealed && isCommitmentValid) {
+      // Valid commitment, waiting for target block
+      setPhase("waiting_for_reveal_available");
       return;
     }
 
-    // Priority order: summon -> waiting for reveal -> commit -> cooldown
-
-    // 1. Can summon (has valid commitment and target block is ready)
-    if (canSummon && hasCommitment && !contractCommitment.isRevealed) {
-      setPhase("summon_available");
+    if (hasCommitment && !contractCommitment.isRevealed && !isCommitmentValid) {
+      // Expired commitment (255+ blocks old or different day)
+      setPhase("cooldown_active");
       return;
     }
 
-    // 2. Has commitment but can't summon yet - check if commitment is still valid
-    if (hasCommitment && !contractCommitment.isRevealed) {
-      if (isCommitmentValid) {
-        // Valid commitment, waiting for target block
-        setPhase("waiting_for_reveal_available");
-        return;
-      } else {
-        // Expired commitment (255+ blocks old or different day)
-        setPhase("cooldown_active");
-        return;
-      }
-    }
-
-    // 3. Can commit (no commitment or new day)
+    // Can commit (no commitment or new day)
     if (canCommit) {
       setPhase("commit_available");
       return;
     }
 
-    // 4. Cooldown (both canCommit and canSummon are false)
+    // Cooldown (both canCommit and canSummon are false)
     setPhase("cooldown_active");
   }, [
     address,
@@ -175,6 +172,7 @@ export function useSummonPhase({
     canCommit,
     isCommitmentValid,
     contractCommitment,
+    hasCommitment,
     currentBlockNumber,
     commitmentData,
     isCommitPending,
