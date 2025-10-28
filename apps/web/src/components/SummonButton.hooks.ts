@@ -149,15 +149,9 @@ export function useSummonPhase({
     }
 
     // Has commitment but can't summon yet - check if commitment is still valid
-    if (hasCommitment && !contractCommitment.isRevealed && isCommitmentValid) {
+    if (hasCommitment && !contractCommitment.isRevealed && isCommitmentValid && !canCommit) {
       // Valid commitment, waiting for target block
       setPhase("waiting_for_reveal_available");
-      return;
-    }
-
-    if (hasCommitment && !contractCommitment.isRevealed && !isCommitmentValid) {
-      // Expired commitment (255+ blocks old or different day)
-      setPhase("cooldown_active");
       return;
     }
 
