@@ -28,6 +28,8 @@ const mockUseBlockNumber = vi.fn();
 const mockUseReadContract = vi.fn();
 const mockUseWriteContract = vi.fn();
 const mockUseWaitForTransactionReceipt = vi.fn();
+const mockUseChainId = vi.fn();
+const mockUseSwitchChain = vi.fn();
 
 vi.mock("wagmi", () => ({
   useAccount: () => mockUseAccount(),
@@ -35,12 +37,35 @@ vi.mock("wagmi", () => ({
   useReadContract: () => mockUseReadContract(),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
+  useChainId: () => mockUseChainId(),
+  useSwitchChain: () => mockUseSwitchChain(),
 }));
 
 // Mock contract config
 vi.mock("@/config/contract.config", () => ({
   CONTRACT_ADDRESS: "0x1234567890123456789012345678901234567890",
   CONTRACT_ABI: [],
+}));
+
+// Mock env config
+vi.mock("@/lib/env.config", () => ({
+  env: {
+    contractAddress: "0x1234567890123456789012345678901234567890" as `0x${string}`,
+    walletConnectProjectId: "test-project-id",
+    network: "polygonAmoy" as const,
+    indexerApiUrl: null,
+  },
+}));
+
+// Mock wagmi config
+vi.mock("@/config/wagmi.config", () => ({
+  config: {},
+  networkConfig: {
+    chain: {
+      id: 1, // Mock chain ID
+      name: "Test Network",
+    },
+  },
 }));
 
 describe("SummonButton Hooks", () => {
@@ -87,6 +112,13 @@ describe("SummonButton Hooks", () => {
       data: undefined,
       isLoading: false,
       error: null,
+    });
+
+    mockUseChainId.mockReturnValue(1); // Default to mainnet chain ID
+
+    mockUseSwitchChain.mockReturnValue({
+      switchChain: vi.fn(),
+      isPending: false,
     });
   });
 
@@ -173,19 +205,15 @@ describe("SummonButton Hooks", () => {
       }).not.toThrow();
     });
 
-    it("should clear commitment data after successful summon", () => {
+    it("should clear commitment data after successful summon", async () => {
       const mockSetSummonedCreature = vi.fn();
       const mockAddress = "0x1234567890123456789012345678901234567890";
+      const mockSummonHash = "0xtxhash" as `0x${string}`;
 
       // Mock the wagmi hooks
       mockUseAccount.mockReturnValue({
         address: mockAddress as `0x${string}`,
         isConnected: true,
-      });
-
-      mockUseWriteContract.mockReturnValue({
-        data: "0xtxhash",
-        isSuccess: true,
       });
 
       mockUseWaitForTransactionReceipt.mockReturnValue({
@@ -194,7 +222,7 @@ describe("SummonButton Hooks", () => {
             {
               address: CONTRACT_ADDRESS,
               topics: [
-                "0x" + "CreatureSummoned".padEnd(64, "0"), // Event signature
+                "0x3afcdbce1e3b42d6685e2020ee7c099a88f43cdb3a5b7de414ebe16c959df338", // Event signature hash
                 "0x0000000000000000000000001234567890123456789012345678901234567890", // user address
                 "0x0000000000000000000000000000000000000000000000000000000000000001", // creature ID 1
               ],
@@ -206,8 +234,13 @@ describe("SummonButton Hooks", () => {
       renderHook(() =>
         useSummonEvents({
           setSummonedCreature: mockSetSummonedCreature,
+          summonHash: mockSummonHash,
+          isSummonSuccess: true,
         })
       );
+
+      // Wait for async operations
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should clear commitment data after summon
       expect(commitRevealUtils.clearCommitmentData).toHaveBeenCalledWith(mockAddress);
