@@ -1,4 +1,22 @@
+import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, vi } from "vitest";
+
+// Provide a global mock for react-query's useQueryClient so tests don't need a provider
+vi.mock("@tanstack/react-query", async () => {
+  const actual =
+    await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+
+  const fakeClient = {
+    resetQueries: vi.fn(),
+    invalidateQueries: vi.fn(),
+    refetchQueries: vi.fn(),
+  } as unknown as QueryClient;
+
+  return {
+    ...actual,
+    useQueryClient: () => fakeClient,
+  };
+});
 
 // Mock localStorage with actual storage behavior
 const localStorageMock = (() => {
