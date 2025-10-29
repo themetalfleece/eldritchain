@@ -10,6 +10,7 @@ import {
   type CommitmentData,
   type ContractCommitment,
 } from "@/lib/commit-reveal.utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
@@ -132,12 +133,8 @@ export function useSummonPhase({
       return;
     }
 
-    // Can summon (has valid commitment and target block is ready)
-    if (canSummon) {
-      setPhase("summon_available");
-      return;
-    }
-
+    // Transaction status checks must come before canSummon/canCommit checks
+    // to prevent race conditions where canSummon is true but transactions are still pending
     if (isCommitPending || isCommitConfirming) {
       setPhase("committing");
       return;
@@ -145,6 +142,13 @@ export function useSummonPhase({
 
     if (isSummonPending || isSummonConfirming) {
       setPhase("summoning");
+      return;
+    }
+
+    // Can summon (has valid commitment and target block is ready)
+    // Only check this after verifying no transactions are in progress
+    if (canSummon) {
+      setPhase("summon_available");
       return;
     }
 
@@ -339,12 +343,27 @@ export function useSummonEvents({
   isSummonSuccess?: boolean;
 }) {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
+  const previousHashRef = useRef<`0x${string}` | undefined>(summonHash);
   const { data: summonReceipt } = useWaitForTransactionReceipt({
     hash: summonHash,
     query: {
       enabled: !!summonHash,
     },
   });
+
+  // Reset query state when summonHash becomes null
+  useEffect(() => {
+    // If we had a previous hash and now it's null, reset the query for that hash and reset the summoned creature
+    if (previousHashRef.current && !summonHash) {
+      queryClient.resetQueries({
+        queryKey: ["waitForTransactionReceipt", { hash: previousHashRef.current }],
+      });
+      setSummonedCreature(null);
+    }
+    // Update the previous hash reference
+    previousHashRef.current = summonHash;
+  }, [summonHash, queryClient, address, setSummonedCreature]);
 
   useEffect(() => {
     if (!isSummonSuccess || !summonReceipt) {

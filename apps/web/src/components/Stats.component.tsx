@@ -21,7 +21,7 @@ export function Stats({ stats, title = "Statistics", showTotalUsers = true }: St
         {showTotalUsers && (
           <div className={styles.statItem}>
             <div className={styles.statValue}>{stats.totalUsers}</div>
-            <div className={styles.statLabel}>Total Users</div>
+            <div className={styles.statLabel}>Total Wallets</div>
           </div>
         )}
         <div className={styles.statItem}>
