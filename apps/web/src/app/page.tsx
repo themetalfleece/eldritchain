@@ -1,66 +1,13 @@
+import { GlobalStats } from "@/components/GlobalStats.component";
 import { InteractiveSection } from "@/components/InteractiveSection.component";
 import { Leaderboard } from "@/components/Leaderboard.component";
 import { RecentSummons } from "@/components/RecentSummons.component";
-import { Stats } from "@/components/Stats.component";
-import { getIndexerUrl } from "@/lib/api.utils";
-import { env } from "@/lib/env.config";
-import { type GlobalStats, type RecentSummonEvent } from "@eldritchain/common";
+
 import Link from "next/link";
 import { Suspense } from "react";
 import { styles } from "./page.styles";
 
-async function fetchGlobalStats(): Promise<GlobalStats | null> {
-  if (!env.indexerApiUrl) {
-    return null;
-  }
-
-  try {
-    const response = await fetch(getIndexerUrl("/api/stats"), {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      console.error("Failed to fetch global stats:", response);
-      return null;
-    }
-
-    const json = await response.json();
-    return json.data || null;
-  } catch (error) {
-    console.error("Error fetching global stats:", error);
-    return null;
-  }
-}
-
-async function fetchRecentSummons(): Promise<RecentSummonEvent[]> {
-  if (!env.indexerApiUrl) {
-    return [];
-  }
-
-  try {
-    const response = await fetch(getIndexerUrl("/api/recent-summons?limit=6"), {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      console.error("Failed to fetch recent summons:", response);
-      return [];
-    }
-
-    const json = await response.json();
-    return json.data || [];
-  } catch (error) {
-    console.error("Error fetching recent summons:", error);
-    return [];
-  }
-}
-
 export default async function Home() {
-  const [globalStats, recentSummons] = await Promise.all([
-    fetchGlobalStats(),
-    fetchRecentSummons(),
-  ]);
-
   return (
     <div className={styles.container}>
       <main className={styles.main.container}>
@@ -82,19 +29,15 @@ export default async function Home() {
           </div>
         </div>
 
-        {globalStats && (
-          <div className={styles.main.statsSection}>
-            <Stats stats={globalStats} />
-          </div>
-        )}
+        <div className={styles.main.statsSection}>
+          <GlobalStats />
+        </div>
 
         <InteractiveSection summonSectionStyles={styles.main.summonSection} />
 
-        {recentSummons.length > 0 && (
-          <div className={styles.main.recentSummonsSection}>
-            <RecentSummons summons={recentSummons} />
-          </div>
-        )}
+        <div className={styles.main.recentSummonsSection}>
+          <RecentSummons />
+        </div>
 
         <div className={styles.main.leaderboardSection}>
           <Suspense fallback={<LeaderboardLoading />}>
