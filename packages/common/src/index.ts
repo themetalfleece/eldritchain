@@ -18,6 +18,7 @@ export type {
 } from "./types";
 
 // Utils
+export { bigIntMax, bigIntMin } from "./utils/bigint";
 export { assertEnv, assertEnvAddress, assertEnvBigInt, assertEnvInt } from "./utils/env";
 
 // Config

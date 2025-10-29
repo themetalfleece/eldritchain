@@ -1,4 +1,4 @@
-import { getCreatureRarity } from "@eldritchain/common";
+import { bigIntMax, bigIntMin, getCreatureRarity } from "@eldritchain/common";
 import mongoose from "mongoose";
 import { createPublicClient, http, parseAbiItem, type Log } from "viem";
 import { indexerConfig } from "../config.indexer";
@@ -52,7 +52,6 @@ async function processEventInTransaction(log: Log, session: mongoose.ClientSessi
   // Check if event already exists to avoid duplicate key error
   const existingEvent = await SummonEvent.findOne({ transactionHash }).session(session);
   if (existingEvent) {
-    console.log(`⏭️  Duplicate event detected (likely from another indexer): ${transactionHash}`);
     return; // Skip duplicate
   }
 
@@ -131,9 +130,11 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
   try {
     await session.withTransaction(async () => {
       // Process events in this block range
+      console.log(`🔍 Processing block range: ${fromBlock} to ${toBlock}`);
       await processSingleChunkInTransaction(fromBlock, toBlock, session);
 
       // Atomically update state after successful processing
+      // Store the window start (latest - 100), not the end block
       const result = await IndexerState.updateOne(
         {},
         {
@@ -159,6 +160,52 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
   }
 }
 
+/** Determine what block range to process next */
+async function determineProcessRange(): Promise<{
+  fromBlock: bigint;
+  toBlock: bigint;
+} | null> {
+  const [state, finalizedBlock] = await Promise.all([
+    IndexerState.findOne(),
+    (async () => {
+      try {
+        // Try to get the finalized block first (most reliable)
+        const block = await publicClient.getBlock({ blockTag: "finalized" });
+        return block.number;
+      } catch (error) {
+        // Fallback to safe block if finalized is not supported
+        console.warn("⚠️  Finalized block not supported, using safe block as fallback");
+        const block = await publicClient.getBlock({ blockTag: "safe" });
+        return block.number;
+      }
+    })(),
+  ]);
+
+  const lastProcessedBlock = state?.lastProcessedBlock
+    ? BigInt(state.lastProcessedBlock.toString())
+    : indexerConfig.startBlock - 1n;
+
+  const windowSize = indexerConfig.safeBlockRange;
+  // Compute the head window start (latest - windowSize), clamped at 0
+  const latestWindowStart = bigIntMax(0n, finalizedBlock - windowSize);
+
+  // Choose the next range start:
+  // - prefer continuing from next unprocessed block (lastProcessedBlock + 1)
+  // - but never go past the head window start (latestWindowStart)
+  // - and never go before the configured startBlock
+  const fromBlock = bigIntMax(
+    indexerConfig.startBlock,
+    bigIntMin(lastProcessedBlock + 1n, latestWindowStart)
+  );
+  // End at window size or the current finalized head, whichever is smaller
+  const toBlock = bigIntMin(fromBlock + windowSize - 1n, finalizedBlock);
+
+  return {
+    fromBlock,
+    toBlock,
+  };
+}
+
 /** Main indexer loop */
 export async function startEventListener(): Promise<void> {
   console.log("🚀 Starting event listener...");
@@ -168,15 +215,15 @@ export async function startEventListener(): Promise<void> {
   );
   console.log(`🔗 RPC: ${indexerConfig.contract.rpcUrl}`);
 
-  // Get initial last processed block for logging
+  // Get initial window start for logging
   const initialState = await IndexerState.findOne();
-  const initialLastBlock = initialState?.lastProcessedBlock
+  const initialWindowStart = initialState?.lastProcessedBlock
     ? BigInt(initialState.lastProcessedBlock.toString())
-    : indexerConfig.startBlock - 1n; // Use startBlock - 1 so first iteration processes startBlock
+    : indexerConfig.startBlock - 1n;
 
-  console.log(`⏮️  Starting from block ${initialLastBlock + 1n}`);
+  console.log(`⏮️  Current window start: ${initialWindowStart}`);
   console.log(`⏱️  Poll interval: ${indexerConfig.pollInterval}ms`);
-  console.log(`📊 Max blocks per poll: ${indexerConfig.maxBlocksPerPoll}\n`);
+  console.log(`📊 Window size: ${indexerConfig.safeBlockRange} blocks\n`);
 
   // Flag for graceful shutdown
   let isShuttingDown = false;
@@ -197,51 +244,9 @@ export async function startEventListener(): Promise<void> {
   // Continuous loop instead of setInterval to ensure sequential processing
   while (!isShuttingDown) {
     try {
-      // Get current blockchain state with retry
-      const [state, finalizedBlock] = await Promise.all([
-        IndexerState.findOne(),
-        (async () => {
-          try {
-            // Try to get the finalized block first (most reliable)
-            const block = await publicClient.getBlock({ blockTag: "finalized" });
-            return block.number;
-          } catch (error) {
-            // Fallback to safe block if finalized is not supported
-            console.warn("⚠️  Finalized block not supported, using safe block as fallback");
-            const block = await publicClient.getBlock({ blockTag: "safe" });
-            return block.number;
-          }
-        })(),
-      ]);
-
-      const lastProcessedBlock = state?.lastProcessedBlock
-        ? BigInt(state.lastProcessedBlock.toString())
-        : indexerConfig.startBlock - 1n;
-
-      // Use a safe range: process blocks up to X blocks behind finalized
-      // This handles temporary finalized block fluctuations on some networks
-      const safeBlock = finalizedBlock - indexerConfig.safeBlockRange;
-
-      if (safeBlock < lastProcessedBlock) {
-        console.error(
-          `🚨 CRITICAL: Safe block (${safeBlock}) is behind processed block (${lastProcessedBlock}). ` +
-            `Finalized: ${finalizedBlock}. This indicates a major network issue.`
-        );
-        throw new Error(
-          `Critical: Safe block range (finalized - 100) is significantly behind. Requires manual intervention.`
-        );
-      }
-
-      if (safeBlock > lastProcessedBlock) {
-        // Process up to maxBlocksPerPoll blocks at a time
-        const fromBlock = lastProcessedBlock + 1n;
-        const blocksToProcess = safeBlock - lastProcessedBlock;
-        const maxBlocksPerPoll = BigInt(indexerConfig.maxBlocksPerPoll);
-        const blocksThisPoll =
-          blocksToProcess > maxBlocksPerPoll ? maxBlocksPerPoll : blocksToProcess;
-        const toBlock = lastProcessedBlock + blocksThisPoll;
-
-        await processBlockRange(fromBlock, toBlock);
+      const processRange = await determineProcessRange();
+      if (processRange) {
+        await processBlockRange(processRange.fromBlock, processRange.toBlock);
       }
     } catch (error) {
       console.error("❌ Error in event listener:", {

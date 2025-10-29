@@ -1,10 +1,9 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:7.0
     container_name: eldritchain-mongodb
     restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     environment:
@@ -16,7 +15,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+
+  mongodb-init:
+    image: mongo:7.0
+    container_name: eldritchain-mongodb-init
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for MongoDB to be ready...' &&
+        sleep 5 &&
+        mongosh --host mongodb:27017 --eval '
+          try {
+            rs.status();
+            print(\"Replica set already initialized\");
+          } catch (e) {
+            print(\"Initializing replica set...\");
+            rs.initiate({
+              _id: \"rs0\",
+              members: [{ _id: 0, host: \"localhost:27017\" }]
+            });
+            print(\"Replica set initialized with localhost:27017\");
+          }
+        ' --quiet &&
+        echo 'MongoDB replica set setup complete'
+      "
 
 volumes:
   mongodb_data:
-

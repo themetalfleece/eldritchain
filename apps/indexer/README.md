@@ -452,10 +452,9 @@ Environment variables in `.env` (all REQUIRED):
 
 **Optional variables:**
 
-| Variable              | Description                                                       | Default | Example            |
-| --------------------- | ----------------------------------------------------------------- | ------- | ------------------ |
-| `MAX_BLOCKS_PER_POLL` | Max blocks to process per poll                                    | `50`    | `50`, `100`        |
-| `SAFE_BLOCK_RANGE`    | Blocks behind finalized to process (handles network fluctuations) | `100`   | `50`, `100`, `200` |
+| Variable           | Description                                                       | Default | Example            |
+| ------------------ | ----------------------------------------------------------------- | ------- | ------------------ |
+| `SAFE_BLOCK_RANGE` | Blocks behind finalized to process (handles network fluctuations) | `100`   | `50`, `100`, `200` |
 
 **💡 SAFE_BLOCK_RANGE Recommendations:**
 
@@ -547,7 +546,7 @@ docker compose up -d
 - Check logs for "⏸️ No new blocks to process" messages (this is normal when caught up)
 - Monitor "📦 Processing blocks" messages to see actual progress
 - Large block ranges may take time due to RPC calls and database operations
-- Use `MAX_BLOCKS_PER_POLL` to adjust batch size (default: 50 blocks per batch)
+- Use `SAFE_BLOCK_RANGE` to adjust batch size (default: 100 blocks per batch)
 - Finalized block processing adds natural delay based on network finality (2-15 minutes)
 
 **"Finalized block fallback warning"**
