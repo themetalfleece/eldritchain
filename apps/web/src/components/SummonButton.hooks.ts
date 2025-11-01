@@ -2,7 +2,6 @@ import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/config/contract.config";
 import { networkConfig } from "@/config/wagmi.config";
 import { Rarity } from "@/data/creatures.data";
 import {
-  clearCommitmentData,
   formatBlocksRemaining,
   generateCommitmentData,
   getCommitmentData,
@@ -275,6 +274,7 @@ export function useSummonActions({
   // Execute summon action
   const executeSummon = () => {
     if (!commitmentData) {
+      console.error("Cannot summon: no commitment data found");
       return;
     }
 
@@ -302,6 +302,7 @@ export function useSummonActions({
 
   const handleSummon = async () => {
     if (!commitmentData) {
+      console.error("Cannot summon: no commitment data found");
       return;
     }
 
@@ -350,6 +351,13 @@ export function useSummonEvents({
     query: {
       enabled: !!summonHash,
     },
+  });
+
+  useResetOnWalletChange(() => setSummonedCreature(null));
+  useResetOnWalletChange(() => {
+    queryClient.resetQueries({
+      queryKey: ["waitForTransactionReceipt", { hash: previousHashRef.current }],
+    });
   });
 
   // Reset query state when summonHash becomes null
@@ -401,11 +409,6 @@ export function useSummonEvents({
           .catch((error) => {
             console.error("Error loading creature data:", error);
           });
-
-        // Clear commitment data after successful summon
-        if (address) {
-          clearCommitmentData(address);
-        }
       }
     }
   }, [isSummonSuccess, summonReceipt, address, setSummonedCreature]);

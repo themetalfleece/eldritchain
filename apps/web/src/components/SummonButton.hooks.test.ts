@@ -205,7 +205,7 @@ describe("SummonButton Hooks", () => {
       }).not.toThrow();
     });
 
-    it("should clear commitment data after successful summon", async () => {
+    it("should NOT clear commitment data after successful summon", async () => {
       const mockSetSummonedCreature = vi.fn();
       const mockAddress = "0x1234567890123456789012345678901234567890";
       const mockSummonHash = "0xtxhash" as `0x${string}`;
@@ -242,8 +242,8 @@ describe("SummonButton Hooks", () => {
       // Wait for async operations
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Should clear commitment data after summon
-      expect(commitRevealUtils.clearCommitmentData).toHaveBeenCalledWith(mockAddress);
+      // Should NOT clear commitment data after summon (kept for next commitment)
+      expect(commitRevealUtils.clearCommitmentData).not.toHaveBeenCalled();
     });
 
     it("should not clear commitment data if no summon event", () => {
