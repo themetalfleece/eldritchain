@@ -36,16 +36,19 @@ export function useSummonPhase({
   isSummonPending,
   isSummonConfirming,
   summonedCreature,
+  commitmentData,
+  setCommitmentData,
 }: {
-  isCommitPending?: boolean;
-  isCommitConfirming?: boolean;
-  isSummonPending?: boolean;
-  isSummonConfirming?: boolean;
-  summonedCreature?: { id: number; name: string; rarity: Rarity } | null;
-} = {}) {
+  isCommitPending: boolean;
+  isCommitConfirming: boolean;
+  isSummonPending: boolean;
+  isSummonConfirming: boolean;
+  summonedCreature: { id: number; name: string; rarity: Rarity } | null;
+  commitmentData: CommitmentData | null;
+  setCommitmentData: (data: CommitmentData | null) => void;
+}) {
   const { address, isConnected } = useAccount();
   const { data: currentBlockNumber } = useBlockNumber({ watch: true });
-  const [commitmentData, setCommitmentData] = useState<CommitmentData | null>(null);
   const [phase, setPhase] = useState<SummonPhase>("cooldown_active");
 
   useResetOnWalletChange(() => setPhase("cooldown_active"));
@@ -104,22 +107,22 @@ export function useSummonPhase({
     },
   });
 
-  // Load persisted commitment data on mount
+  // Load persisted commitment data on address change
   useEffect(() => {
-    if (address && !commitmentData) {
+    if (address) {
       const stored = getCommitmentData(address);
       if (stored) {
         setCommitmentData(stored);
       }
     }
-  }, [address, commitmentData]);
+  }, [address, setCommitmentData]);
 
   // Reset state when wallet disconnects
   useEffect(() => {
     if (!isConnected) {
       setCommitmentData(null);
     }
-  }, [isConnected]);
+  }, [isConnected, setCommitmentData]);
 
   useEffect(() => {
     if (!address || !contractCommitment || !currentBlockNumber || canCommit === undefined) {

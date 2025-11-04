@@ -52,6 +52,8 @@ export function SummonButton() {
     isSummonPending,
     isSummonConfirming,
     summonedCreature,
+    commitmentData,
+    setCommitmentData,
   });
 
   useSummonEvents({
