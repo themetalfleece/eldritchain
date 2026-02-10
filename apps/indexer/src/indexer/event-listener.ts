@@ -185,20 +185,21 @@ async function determineProcessRange(): Promise<{
     ? BigInt(state.lastProcessedBlock.toString())
     : indexerConfig.startBlock - 1n;
 
-  const windowSize = indexerConfig.safeBlockRange;
-  // Compute the head window start (latest - windowSize), clamped at 0
-  const latestWindowStart = bigIntMax(0n, finalizedBlock - windowSize);
+  const safetyBuffer = indexerConfig.safeBlockRange;
+  const chunkSize = indexerConfig.blockChunkSize;
+  // Compute the safe head: stay safetyBuffer blocks behind finalized
+  const safeHead = bigIntMax(0n, finalizedBlock - safetyBuffer);
 
   // Choose the next range start:
   // - prefer continuing from next unprocessed block (lastProcessedBlock + 1)
-  // - but never go past the head window start (latestWindowStart)
+  // - but never go past the safe head
   // - and never go before the configured startBlock
   const fromBlock = bigIntMax(
     indexerConfig.startBlock,
-    bigIntMin(lastProcessedBlock + 1n, latestWindowStart)
+    bigIntMin(lastProcessedBlock + 1n, safeHead)
   );
-  // End at window size or the current finalized head, whichever is smaller
-  const toBlock = bigIntMin(fromBlock + windowSize - 1n, finalizedBlock);
+  // End at chunkSize blocks or the safe head, whichever is smaller
+  const toBlock = bigIntMin(fromBlock + chunkSize - 1n, safeHead);
 
   return {
     fromBlock,
@@ -223,7 +224,8 @@ export async function startEventListener(): Promise<void> {
 
   console.log(`⏮️  Current window start: ${initialWindowStart}`);
   console.log(`⏱️  Poll interval: ${indexerConfig.pollInterval}ms`);
-  console.log(`📊 Window size: ${indexerConfig.safeBlockRange} blocks\n`);
+  console.log(`📊 Safe block range: ${indexerConfig.safeBlockRange} blocks behind finalized`);
+  console.log(`📦 Block chunk size: ${indexerConfig.blockChunkSize} blocks per fetch\n`);
 
   // Flag for graceful shutdown
   let isShuttingDown = false;

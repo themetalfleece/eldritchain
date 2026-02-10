@@ -25,5 +25,8 @@ export const indexerConfig = {
   pollInterval: assertEnvInt(process.env.POLL_INTERVAL, "POLL_INTERVAL"),
   safeBlockRange: process.env.SAFE_BLOCK_RANGE
     ? assertEnvBigInt(process.env.SAFE_BLOCK_RANGE, "SAFE_BLOCK_RANGE")
-    : 100n, // Default: 100 blocks behind finalized
+    : 100n, // Default: stay 100 blocks behind finalized
+  blockChunkSize: process.env.BLOCK_CHUNK_SIZE
+    ? assertEnvBigInt(process.env.BLOCK_CHUNK_SIZE, "BLOCK_CHUNK_SIZE")
+    : 10n, // Default: fetch up to 10 blocks per getLogs call
 };
