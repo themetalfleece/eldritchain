@@ -18,7 +18,7 @@ export const indexerConfig = {
   contract: {
     address: assertEnvAddress(process.env.CONTRACT_ADDRESS, "CONTRACT_ADDRESS"),
     networkName,
-    rpcUrl: network.chain.rpcUrls.default.http[0],
+    rpcUrl: process.env.RPC_URL || network.chain.rpcUrls.default.http[0],
     chainId: network.chain.id,
   },
   startBlock: assertEnvBigInt(process.env.START_BLOCK, "START_BLOCK"),
