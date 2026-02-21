@@ -3,6 +3,7 @@
 import { Collection } from "@/components/Collection.component";
 import { CollectionStats } from "@/components/CollectionStats.component";
 import { CopyLinkButton } from "@/components/CopyLinkButton.component";
+import { ScannerLink } from "@/components/ScannerLink.component";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { isAddress } from "viem";
@@ -26,7 +27,11 @@ export function WalletCollection() {
       <div className={styles.main.hero.container}>
         <h2 className={styles.main.hero.title}>Wallet Collection</h2>
         <p className={styles.main.hero.address}>
-          {isValidAddress ? address : "Invalid wallet address"}
+          {isValidAddress ? (
+            <ScannerLink address={address} />
+          ) : (
+            "Invalid wallet address"
+          )}
         </p>
         {isValidAddress && (
           <div className={styles.main.hero.copyButton}>

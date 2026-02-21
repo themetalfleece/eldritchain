@@ -48,3 +48,6 @@ apps/contracts/typechain-types/
 # Misc
 *.log
 .cache/
+
+# Claude
+.claude/settings.local.json
