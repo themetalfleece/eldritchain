@@ -20,6 +20,8 @@ export const styles = {
     body: "divide-y divide-purple-800/20",
 
     row: "grid grid-cols-3 md:grid-cols-7 gap-2 md:gap-4 p-3 md:p-4 hover:bg-purple-900/20 transition-colors cursor-pointer no-underline",
+    rowHighlighted:
+      "grid grid-cols-3 md:grid-cols-7 gap-2 md:gap-4 p-3 md:p-4 bg-yellow-500/15 border-l-2 border-l-yellow-400 hover:bg-yellow-500/25 transition-colors cursor-pointer no-underline",
 
     cell: {
       rank: "text-yellow-400 font-bold text-sm md:text-base",

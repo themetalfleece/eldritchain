@@ -5,6 +5,7 @@ import { env } from "@/lib/env.config";
 import { type LeaderboardEntry } from "@eldritchain/common";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useAccount } from "wagmi";
 import { styles } from "./Leaderboard.styles";
 
 interface LeaderboardClientProps {
@@ -13,6 +14,7 @@ interface LeaderboardClientProps {
 }
 
 export function LeaderboardClient({ limit, initialLeaderboard }: LeaderboardClientProps) {
+  const { address: connectedAddress } = useAccount();
   const { data } = useQuery<LeaderboardEntry[]>({
     queryKey: ["leaderboard", { limit }],
     enabled: Boolean(env.indexerApiUrl),
@@ -58,11 +60,14 @@ export function LeaderboardClient({ limit, initialLeaderboard }: LeaderboardClie
           <div className={styles.table.cell.total}>Total</div>
         </div>
         <div className={styles.table.body}>
-          {leaderboard.map((entry, index) => (
+          {leaderboard.map((entry, index) => {
+            const isConnectedWallet =
+              connectedAddress?.toLowerCase() === entry.address.toLowerCase();
+            return (
             <Link
               key={entry.address}
               href={`/wallet/${entry.address}`}
-              className={styles.table.row}
+              className={isConnectedWallet ? styles.table.rowHighlighted : styles.table.row}
             >
               <div className={styles.table.cell.rank}>#{index + 1}</div>
               <div className={styles.table.cell.address} title={entry.address}>
@@ -87,7 +92,8 @@ export function LeaderboardClient({ limit, initialLeaderboard }: LeaderboardClie
               </div>
               <div className={styles.table.cell.total}>{entry.totalSummons}</div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
