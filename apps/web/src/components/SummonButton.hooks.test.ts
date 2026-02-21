@@ -123,8 +123,18 @@ describe("SummonButton Hooks", () => {
   });
 
   describe("useSummonPhase", () => {
+    const defaultPhaseArgs = {
+      isCommitPending: false,
+      isCommitConfirming: false,
+      isSummonPending: false,
+      isSummonConfirming: false,
+      summonedCreature: null,
+      commitmentData: null,
+      setCommitmentData: vi.fn(),
+    };
+
     it("should return expected properties", () => {
-      const { result } = renderHook(() => useSummonPhase());
+      const { result } = renderHook(() => useSummonPhase(defaultPhaseArgs));
 
       expect(result.current).toHaveProperty("phase");
       expect(result.current).toHaveProperty("commitmentData");
@@ -137,9 +147,9 @@ describe("SummonButton Hooks", () => {
     });
 
     it("should return valid phase values", () => {
-      const { result } = renderHook(() => useSummonPhase());
+      const { result } = renderHook(() => useSummonPhase(defaultPhaseArgs));
 
-      const validPhases = [
+      const validPhases: SummonPhase[] = [
         "commit_available",
         "committing",
         "waiting_for_reveal_available",
@@ -147,7 +157,6 @@ describe("SummonButton Hooks", () => {
         "summoning",
         "creature_summoned",
         "cooldown_active",
-        "loading",
       ];
       expect(validPhases).toContain(result.current.phase);
     });
