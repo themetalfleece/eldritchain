@@ -133,19 +133,18 @@ async function processBlockRange(fromBlock: bigint, toBlock: bigint): Promise<vo
       console.log(`🔍 Processing block range: ${fromBlock} to ${toBlock}`);
       await processSingleChunkInTransaction(fromBlock, toBlock, session);
 
-      // Atomically update state after successful processing
-      // Store the window start (latest - 100), not the end block
+      // Atomically advance state — $max ensures we never regress
       const result = await IndexerState.updateOne(
         {},
         {
-          lastProcessedBlock: toBlock.toString(),
-          updatedAt: new Date(),
+          $max: { lastProcessedBlock: toBlock.toString() },
+          $set: { updatedAt: new Date() },
         },
         { upsert: true, session }
       );
 
-      // Verify that either an update or insert occurred
-      if (result.modifiedCount === 0 && result.upsertedCount === 0) {
+      // Verify the document was matched or inserted
+      if (result.matchedCount === 0 && result.upsertedCount === 0) {
         throw new Error("Failed to update or insert indexer state");
       }
     });
@@ -190,14 +189,13 @@ async function determineProcessRange(): Promise<{
   // Compute the safe head: stay safetyBuffer blocks behind finalized
   const safeHead = bigIntMax(0n, finalizedBlock - safetyBuffer);
 
-  // Choose the next range start:
-  // - prefer continuing from next unprocessed block (lastProcessedBlock + 1)
-  // - but never go past the safe head
-  // - and never go before the configured startBlock
-  const fromBlock = bigIntMax(
-    indexerConfig.startBlock,
-    bigIntMin(lastProcessedBlock + 1n, safeHead)
-  );
+  // If we've already processed past the safe head, wait for new blocks
+  if (lastProcessedBlock >= safeHead) {
+    return null;
+  }
+
+  // Continue from the next unprocessed block, never before startBlock
+  const fromBlock = bigIntMax(indexerConfig.startBlock, lastProcessedBlock + 1n);
   // End at chunkSize blocks or the safe head, whichever is smaller
   const toBlock = bigIntMin(fromBlock + chunkSize - 1n, safeHead);
 
