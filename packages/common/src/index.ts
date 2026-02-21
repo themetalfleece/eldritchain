@@ -4,6 +4,7 @@ export {
   getCreatureRarity,
   getRarityDropRate,
   isValidCreatureId,
+  RARITY_SCORES,
   rarityTiers,
 } from "./constants/creature-ranges";
 

@@ -1,7 +1,38 @@
+import { RARITY_SCORES } from "@eldritchain/common";
 import cors from "@fastify/cors";
 import fastify from "fastify";
 import { apiConfig } from "../config.api";
 import { SummonEvent } from "../db/models";
+
+/** Reusable aggregation stage: count summons per rarity */
+const $groupRarityCounts = {
+  deityCount: {
+    $sum: { $cond: [{ $eq: ["$rarity", "deity"] }, 1, 0] },
+  },
+  epicCount: {
+    $sum: { $cond: [{ $eq: ["$rarity", "epic"] }, 1, 0] },
+  },
+  rareCount: {
+    $sum: { $cond: [{ $eq: ["$rarity", "rare"] }, 1, 0] },
+  },
+  commonCount: {
+    $sum: { $cond: [{ $eq: ["$rarity", "common"] }, 1, 0] },
+  },
+};
+
+/** Reusable aggregation stage: compute score from rarity counts */
+const $addScore = {
+  $addFields: {
+    score: {
+      $add: [
+        { $multiply: ["$commonCount", RARITY_SCORES.common] },
+        { $multiply: ["$rareCount", RARITY_SCORES.rare] },
+        { $multiply: ["$epicCount", RARITY_SCORES.epic] },
+        { $multiply: ["$deityCount", RARITY_SCORES.deity] },
+      ],
+    },
+  },
+};
 
 const app = fastify({
   logger: {
@@ -26,42 +57,23 @@ app.get<{
   try {
     const limit = Math.min(parseInt(req.query.limit || "100") || 100, 1000);
 
-    // Aggregate user stats from events
     const leaderboard = await SummonEvent.aggregate([
       {
         $group: {
           _id: "$address",
           totalSummons: { $sum: 1 },
-          deityCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "deity"] }, 1, 0] },
-          },
-          epicCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "epic"] }, 1, 0] },
-          },
-          rareCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "rare"] }, 1, 0] },
-          },
-          commonCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "common"] }, 1, 0] },
-          },
+          ...$groupRarityCounts,
           lastSummonTime: { $max: "$timestamp" },
         },
       },
-      {
-        $sort: {
-          deityCount: -1,
-          epicCount: -1,
-          rareCount: -1,
-          commonCount: -1,
-        },
-      },
-      {
-        $limit: limit,
-      },
+      $addScore,
+      { $sort: { score: -1 } },
+      { $limit: limit },
       {
         $project: {
           _id: 0,
           address: "$_id",
+          score: 1,
           totalSummons: 1,
           deityCount: 1,
           epicCount: 1,
@@ -94,28 +106,17 @@ app.get<{
   try {
     const address = req.params.address.toLowerCase();
 
-    // Get user stats from events
     const userStats = await SummonEvent.aggregate([
       { $match: { address } },
       {
         $group: {
           _id: "$address",
           totalSummons: { $sum: 1 },
-          deityCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "deity"] }, 1, 0] },
-          },
-          epicCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "epic"] }, 1, 0] },
-          },
-          rareCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "rare"] }, 1, 0] },
-          },
-          commonCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "common"] }, 1, 0] },
-          },
+          ...$groupRarityCounts,
           lastSummonTime: { $max: "$timestamp" },
         },
       },
+      $addScore,
     ]);
 
     if (!userStats.length) {
@@ -128,47 +129,10 @@ app.get<{
 
     const stats = userStats[0];
 
-    // Calculate rank
     const betterUsers = await SummonEvent.aggregate([
-      {
-        $group: {
-          _id: "$address",
-          deityCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "deity"] }, 1, 0] },
-          },
-          epicCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "epic"] }, 1, 0] },
-          },
-          rareCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "rare"] }, 1, 0] },
-          },
-          commonCount: {
-            $sum: { $cond: [{ $eq: ["$rarity", "common"] }, 1, 0] },
-          },
-        },
-      },
-      {
-        $match: {
-          $or: [
-            { deityCount: { $gt: stats.deityCount } },
-            {
-              deityCount: stats.deityCount,
-              epicCount: { $gt: stats.epicCount },
-            },
-            {
-              deityCount: stats.deityCount,
-              epicCount: stats.epicCount,
-              rareCount: { $gt: stats.rareCount },
-            },
-            {
-              deityCount: stats.deityCount,
-              epicCount: stats.epicCount,
-              rareCount: stats.rareCount,
-              commonCount: { $gt: stats.commonCount },
-            },
-          ],
-        },
-      },
+      { $group: { _id: "$address", ...$groupRarityCounts } },
+      $addScore,
+      { $match: { score: { $gt: stats.score } } },
       { $count: "count" },
     ]);
 
@@ -178,6 +142,7 @@ app.get<{
       success: true,
       data: {
         address: stats._id,
+        score: stats.score,
         totalSummons: stats.totalSummons,
         deityCount: stats.deityCount,
         epicCount: stats.epicCount,

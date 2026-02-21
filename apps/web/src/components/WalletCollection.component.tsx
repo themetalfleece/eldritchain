@@ -27,11 +27,7 @@ export function WalletCollection() {
       <div className={styles.main.hero.container}>
         <h2 className={styles.main.hero.title}>Wallet Collection</h2>
         <p className={styles.main.hero.address}>
-          {isValidAddress ? (
-            <ScannerLink address={address} />
-          ) : (
-            "Invalid wallet address"
-          )}
+          {isValidAddress ? <ScannerLink address={address} /> : "Invalid wallet address"}
         </p>
         {isValidAddress && (
           <div className={styles.main.hero.copyButton}>

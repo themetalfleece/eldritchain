@@ -29,7 +29,7 @@ export const styles = {
       addressDesktop: "hidden md:inline",
       addressMobile: "md:hidden",
       count: "text-center hidden md:block",
-      total: "text-center font-semibold text-purple-100 text-sm md:text-base",
+      score: "text-center font-semibold text-purple-100 text-sm md:text-base",
     },
   },
 

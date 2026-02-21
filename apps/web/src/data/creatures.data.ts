@@ -1,6 +1,7 @@
-import { type Rarity } from "@eldritchain/common";
+import { RARITY_SCORES, type Rarity } from "@eldritchain/common";
 import creaturesJson from "./creatures.json";
 
+export { RARITY_SCORES };
 export type { Rarity };
 
 export interface Creature {
@@ -9,16 +10,6 @@ export interface Creature {
   rarity: Rarity;
   description: string;
 }
-
-// Wallet Level Scoring System (based on summon rarity percentages)
-// Common: 70%, Rare: 25%, Epic: 4.5%, Deity: 0.5%
-// Scores reflect relative rarity with higher multipliers for rarer creatures
-export const RARITY_SCORES = {
-  common: 1, // Base score
-  rare: 5, // ~2.8x rarer than common
-  epic: 30, // ~15.4x rarer than common
-  deity: 400, // ~140x rarer than common
-} as const;
 
 // Level thresholds (computed using formula: level(n) = 5 * (n-1) * n / 2)
 export function getLevelThreshold(level: number): number {

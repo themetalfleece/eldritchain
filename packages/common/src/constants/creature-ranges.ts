@@ -29,6 +29,14 @@ export const rarityTiers = ["common", "rare", "epic", "deity"] as const;
 /** Rarity type */
 export type Rarity = (typeof rarityTiers)[number];
 
+/** Score weights per rarity for leaderboard/wallet level scoring */
+export const RARITY_SCORES: Record<Rarity, number> = {
+  common: 1,
+  rare: 5,
+  epic: 30,
+  deity: 400,
+} as const;
+
 /** Determine creature rarity based on ID */
 export function getCreatureRarity(creatureId: number): Rarity {
   if (creatureId >= creatureRanges.deity.base && creatureId <= creatureRanges.deity.max) {

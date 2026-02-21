@@ -57,41 +57,41 @@ export function LeaderboardClient({ limit, initialLeaderboard }: LeaderboardClie
           <div className={styles.table.cell.count}>Epics</div>
           <div className={styles.table.cell.count}>Rares</div>
           <div className={styles.table.cell.count}>Commons</div>
-          <div className={styles.table.cell.total}>Total</div>
+          <div className={styles.table.cell.score}>Score</div>
         </div>
         <div className={styles.table.body}>
           {leaderboard.map((entry, index) => {
             const isConnectedWallet =
               connectedAddress?.toLowerCase() === entry.address.toLowerCase();
             return (
-            <Link
-              key={entry.address}
-              href={`/wallet/${entry.address}`}
-              className={isConnectedWallet ? styles.table.rowHighlighted : styles.table.row}
-            >
-              <div className={styles.table.cell.rank}>#{index + 1}</div>
-              <div className={styles.table.cell.address} title={entry.address}>
-                <span className={styles.table.cell.addressDesktop}>
-                  {entry.address.slice(0, 7)}...{entry.address.slice(-5)}
-                </span>
-                <span className={styles.table.cell.addressMobile}>
-                  {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
-                </span>
-              </div>
-              <div className={styles.table.cell.count}>
-                <span className={styles.rarity.deity}>{entry.deityCount}</span>
-              </div>
-              <div className={styles.table.cell.count}>
-                <span className={styles.rarity.epic}>{entry.epicCount}</span>
-              </div>
-              <div className={styles.table.cell.count}>
-                <span className={styles.rarity.rare}>{entry.rareCount}</span>
-              </div>
-              <div className={styles.table.cell.count}>
-                <span className={styles.rarity.common}>{entry.commonCount}</span>
-              </div>
-              <div className={styles.table.cell.total}>{entry.totalSummons}</div>
-            </Link>
+              <Link
+                key={entry.address}
+                href={`/wallet/${entry.address}`}
+                className={isConnectedWallet ? styles.table.rowHighlighted : styles.table.row}
+              >
+                <div className={styles.table.cell.rank}>#{index + 1}</div>
+                <div className={styles.table.cell.address} title={entry.address}>
+                  <span className={styles.table.cell.addressDesktop}>
+                    {entry.address.slice(0, 7)}...{entry.address.slice(-5)}
+                  </span>
+                  <span className={styles.table.cell.addressMobile}>
+                    {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+                  </span>
+                </div>
+                <div className={styles.table.cell.count}>
+                  <span className={styles.rarity.deity}>{entry.deityCount}</span>
+                </div>
+                <div className={styles.table.cell.count}>
+                  <span className={styles.rarity.epic}>{entry.epicCount}</span>
+                </div>
+                <div className={styles.table.cell.count}>
+                  <span className={styles.rarity.rare}>{entry.rareCount}</span>
+                </div>
+                <div className={styles.table.cell.count}>
+                  <span className={styles.rarity.common}>{entry.commonCount}</span>
+                </div>
+                <div className={styles.table.cell.score}>{entry.score}</div>
+              </Link>
             );
           })}
         </div>

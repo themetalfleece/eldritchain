@@ -18,6 +18,7 @@ export interface SummonEvent {
 /** Leaderboard entry */
 export interface LeaderboardEntry {
   address: string;
+  score: number;
   totalSummons: number;
   deityCount: number;
   epicCount: number;
