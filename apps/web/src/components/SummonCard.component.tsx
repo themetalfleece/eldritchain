@@ -15,9 +15,14 @@ export function SummonCard({ summon }: { summon: RecentSummonEvent }) {
   }
 
   return (
-    <Link href={`/wallet/${summon.address}`} className={`${styles.card} border ${getRarityColor(summon.rarity)}`}>
+    <Link
+      href={`/wallet/${summon.address}`}
+      className={`${styles.card} border ${getRarityColor(summon.rarity)}`}
+    >
       <div className={styles.creatureInfo}>
-        <div className={`${styles.rarity} ${getRarityBgColor(summon.rarity)} ${getRarityColor(summon.rarity)}`}>
+        <div
+          className={`${styles.rarity} ${getRarityBgColor(summon.rarity)} ${getRarityColor(summon.rarity)}`}
+        >
           {summon.rarity.toUpperCase()}
         </div>
         <div className={styles.creatureName}>{creature.name}</div>
